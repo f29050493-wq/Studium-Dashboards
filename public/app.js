@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initClock();
   initCalendar();
   initMonthCalendar();
+  loadCourses();
   loadHabits();
   
   // Self-Care Modules
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.ok) {
           addCourseForm.reset();
           if (window.calendarObj) window.calendarObj.refetchEvents();
+          loadCourses();
         }
       } catch (err) { console.error(err); }
     });
@@ -47,7 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const color = document.getElementById('app-color').value;
 
       if (window.monthCalendarObj) {
-        window.monthCalendarObj.addEvent({ title, start: date, allDay: true, backgroundColor: color, borderColor: color });
+        window.monthCalendarObj.addEvent({
+          id: 'app_' + Date.now(),
+          title,
+          start: date,
+          allDay: true,
+          backgroundColor: color,
+          borderColor: color
+        });
         addAppForm.reset();
       }
     });
@@ -132,7 +141,7 @@ function initCalendar() {
   window.calendarObj = calendar;
 }
 
-/* Monats-Kalender für Termine unten */
+/* Monats-Kalender mit Klick zum Löschen */
 function initMonthCalendar() {
   const container = document.getElementById('month-calendar');
   if (!container) return;
@@ -148,6 +157,11 @@ function initMonthCalendar() {
     },
     editable: true,
     events: JSON.parse(localStorage.getItem('userAppointments') || '[]'),
+    eventClick: function(info) {
+      if (confirm(`Möchtest du den Termin "${info.event.title}" löschen?`)) {
+        info.event.remove();
+      }
+    },
     eventChange: saveAppointments,
     eventAdd: saveAppointments,
     eventRemove: saveAppointments
@@ -160,6 +174,7 @@ function initMonthCalendar() {
 function saveAppointments() {
   if (!window.monthCalendarObj) return;
   const events = window.monthCalendarObj.getEvents().map(e => ({
+    id: e.id,
     title: e.title,
     start: e.startStr,
     backgroundColor: e.backgroundColor,
@@ -168,6 +183,37 @@ function saveAppointments() {
   localStorage.setItem('userAppointments', JSON.stringify(events));
 }
 
+/* Kurse abrufen & löschen */
+async function loadCourses() {
+  try {
+    const res = await fetch('/api/events');
+    const courses = await res.json();
+    const container = document.getElementById('courses-list');
+    if (container) {
+      if (courses.length === 0) {
+        container.innerHTML = '<p class="subtext">Keine Kurse eingetragen.</p>';
+        return;
+      }
+      container.innerHTML = courses.map(c => `
+        <div class="course-item" style="--course-c: ${c.color || '#e10600'}">
+          <span>${c.title}</span>
+          <button class="btn-delete" onclick="deleteCourse('${c._id || c.id}')" title="Kurs löschen">🗑️</button>
+        </div>
+      `).join('');
+    }
+  } catch (err) { console.error(err); }
+}
+
+async function deleteCourse(id) {
+  if (!confirm('Kurs wirklich löschen?')) return;
+  try {
+    await fetch(`/api/events/${id}`, { method: 'DELETE' });
+    if (window.calendarObj) window.calendarObj.refetchEvents();
+    loadCourses();
+  } catch (err) { console.error(err); }
+}
+
+/* Habits / Pit Stop Checklist */
 async function loadHabits() {
   try {
     const res = await fetch('/api/habits');
@@ -175,9 +221,22 @@ async function loadHabits() {
     const container = document.getElementById('habits-container');
     if (container) {
       container.innerHTML = habits.map(h => `
-        <div class="habit-card"><span>${h.name}</span><input type="checkbox"></div>
+        <div class="habit-card">
+          <div>
+            <input type="checkbox" style="margin-right: 6px;">
+            <span>${h.name}</span>
+          </div>
+          <button class="btn-delete" onclick="deleteHabit('${h._id || h.id}')" title="Habit löschen">🗑️</button>
+        </div>
       `).join('');
     }
+  } catch (err) { console.error(err); }
+}
+
+async function deleteHabit(id) {
+  try {
+    await fetch(`/api/habits/${id}`, { method: 'DELETE' });
+    loadHabits();
   } catch (err) { console.error(err); }
 }
 
@@ -199,7 +258,6 @@ function initTrackers() {
   select.addEventListener('change', () => renderTracker(select.value));
   renderTracker('mood');
 
-  // Menü schließen, wenn man außerhalb klickt
   document.addEventListener('click', (e) => {
     const popup = document.getElementById('tracker-popup-menu');
     if (popup && !popup.contains(e.target) && !e.target.classList.contains('interactive-cell')) {
@@ -248,14 +306,12 @@ function renderTracker(type) {
   svgHtml += `</svg>`;
   container.innerHTML = svgHtml;
 
-  // Interaktivität mit Popup-Menü
   container.querySelectorAll('.interactive-cell').forEach(cell => {
     cell.addEventListener('click', (e) => {
       e.stopPropagation();
       const targetCell = e.target;
       const key = targetCell.getAttribute('data-key');
 
-      // Pop-up Menü-Inhalt aufbauen
       let menuHtml = config.labels.map((lbl, idx) => {
         const levelNum = idx + 1;
         const color = config.colors[levelNum];
@@ -266,18 +322,15 @@ function renderTracker(type) {
         `;
       }).join('');
 
-      // Option zum Zurücksetzen / Leeren
-      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #555" data-level="0">✕ Zurücksetzen</button>`;
+      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #555" data-level="0">🗑️ Feld zurücksetzen</button>`;
 
       popup.innerHTML = menuHtml;
 
-      // Positionierung relativ zum Mutterpanel
       const parentRect = popup.parentElement.getBoundingClientRect();
       popup.style.left = `${e.clientX - parentRect.left + 10}px`;
       popup.style.top = `${e.clientY - parentRect.top + 10}px`;
       popup.classList.remove('hidden');
 
-      // Klicks im Menü verarbeiten
       popup.querySelectorAll('.tracker-menu-btn').forEach(btn => {
         btn.onclick = () => {
           const selectedLvl = parseInt(btn.getAttribute('data-level'));
@@ -302,17 +355,17 @@ function initBookshelf() {
   function renderBooks() {
     container.innerHTML = '';
     for (let i = 0; i < 10; i++) {
-      const book = savedBooks[i] || { title: 'Book ' + (i + 1), read: false };
+      const book = savedBooks[i] || { title: 'Buch ' + (i + 1), read: false };
       const bookEl = document.createElement('div');
       bookEl.className = 'book-spine';
       bookEl.style.height = (80 + (i % 4) * 14) + 'px';
       bookEl.style.backgroundColor = book.read ? '#e10600' : '#2a2e39';
       bookEl.textContent = book.title;
       bookEl.addEventListener('click', () => {
-        const newTitle = prompt('Buchtitel eingeben:', book.title);
+        const newTitle = prompt('Buchtitel eingeben (leer lassen zum Zurücksetzen):', book.title);
         if (newTitle !== null) {
-          book.title = newTitle;
-          book.read = !book.read;
+          book.title = newTitle.trim() === '' ? 'Buch ' + (i + 1) : newTitle;
+          book.read = newTitle.trim() !== '' ? !book.read : false;
           savedBooks[i] = book;
           localStorage.setItem('bookshelfData', JSON.stringify(savedBooks));
           renderBooks();
@@ -351,7 +404,6 @@ function initBingo() {
   });
 }
 
-/* Dynamische Projektliste mit Prozenten, Hinzufügen & Löschen */
 function initProjectProgress() {
   const container = document.getElementById('project-list');
   const addBtn = document.getElementById('add-project-btn');
@@ -375,13 +427,12 @@ function initProjectProgress() {
           <span>${proj.name}</span>
           <div class="project-meta">
             <span id="val-${idx}">${proj.val}%</span>
-            <button class="btn-delete" data-idx="${idx}" title="Projekt löschen">✕</button>
+            <button class="btn-delete" data-idx="${idx}" title="Projekt löschen">🗑️</button>
           </div>
         </div>
         <input type="range" min="0" max="100" value="${proj.val}" data-idx="${idx}">
       `;
 
-      // Event-Listener zum Ändern des Prozentwerts
       item.querySelector('input[type="range"]').addEventListener('input', (e) => {
         const newVal = e.target.value;
         projects[idx].val = newVal;
@@ -389,7 +440,6 @@ function initProjectProgress() {
         localStorage.setItem('customProjects', JSON.stringify(projects));
       });
 
-      // Event-Listener zum Löschen des Projekts
       item.querySelector('.btn-delete').addEventListener('click', () => {
         projects.splice(idx, 1);
         localStorage.setItem('customProjects', JSON.stringify(projects));

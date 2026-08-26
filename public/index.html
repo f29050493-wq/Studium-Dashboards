@@ -30,7 +30,7 @@
     <!-- VIEW 1: STUDIUM DASHBOARD -->
     <div id="view-studium" class="dashboard-view active">
       <div class="dashboard-grid">
-        <!-- LINKS: Kurs hinzufügen & Pit Stop Checklist -->
+        <!-- LINKS: Kurs hinzufügen, Kursliste & Pit Stop Checklist -->
         <section class="panel left-panel">
           <h2><span class="icon">🏎️</span> Kurs hinzufügen</h2>
           <form id="add-course-form">
@@ -75,7 +75,11 @@
             <button type="submit" class="btn-paddock">+ KURS EINTRAGEN</button>
           </form>
 
-          <h2 style="margin-top: 2rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
+          <!-- LISTE ALLER KURSE MIT LÖSCH-MÖGLICHKEIT -->
+          <h2 style="margin-top: 1.5rem;"><span class="icon">📚</span> Eingetragene Kurse</h2>
+          <div id="courses-list" class="habits-list"></div>
+
+          <h2 style="margin-top: 1.5rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
           <div id="habits-container" class="habits-list"></div>
         </section>
 
@@ -106,7 +110,8 @@
           <button type="submit" class="btn-paddock" style="align-self: flex-end;">+ TERMIN EINTRAGEN</button>
         </form>
 
-        <div id="month-calendar" style="margin-top: 1.5rem;"></div>
+        <p class="subtext" style="margin-top: 0.5rem; margin-bottom: 0;">💡 Tipp: Klicke auf einen Termin im Kalender, um ihn zu löschen.</p>
+        <div id="month-calendar" style="margin-top: 1rem;"></div>
       </section>
     </div>
 
@@ -133,7 +138,6 @@
         <div class="tracker-legend" id="tracker-legend-display"></div>
         <div id="interactive-tracker-container"></div>
 
-        <!-- Pop-up Menü für Schnellauswahl -->
         <div id="tracker-popup-menu" class="tracker-menu hidden"></div>
       </section>
 
@@ -145,7 +149,7 @@
           <!-- Bookshelf -->
           <div class="subcard">
             <h3>📚 Bookshelf / Reading Tracker</h3>
-            <p class="subtext">Klicke ein Buch an, um den Titel einzugeben oder den Status zu ändern.</p>
+            <p class="subtext">Klicke ein Buch an, um Titel/Status zu ändern (Leeren löscht den Titel).</p>
             <div id="bookshelf-container" class="bookshelf"></div>
           </div>
 
