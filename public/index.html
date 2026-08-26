@@ -30,7 +30,7 @@
     <!-- VIEW 1: STUDIUM DASHBOARD -->
     <div id="view-studium" class="dashboard-view active">
       <div class="dashboard-grid">
-        <!-- LINKS: Kurs hinzufügen, Kursliste & Pit Stop Checklist -->
+        <!-- LINKS: Kurs hinzufügen, Kursliste, Habit hinzufügen & Habitliste -->
         <section class="panel left-panel">
           <h2><span class="icon">🏎️</span> Kurs hinzufügen</h2>
           <form id="add-course-form">
@@ -75,15 +75,22 @@
             <button type="submit" class="btn-paddock">+ KURS EINTRAGEN</button>
           </form>
 
-          <!-- LISTE ALLER KURSE MIT LÖSCH-MÖGLICHKEIT -->
+          <!-- LISTE ALLER KURSE -->
           <h2 style="margin-top: 1.5rem;"><span class="icon">📚</span> Eingetragene Kurse</h2>
           <div id="courses-list" class="habits-list"></div>
 
+          <!-- HABIT HINZUFÜGEN & LISTE -->
           <h2 style="margin-top: 1.5rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
+          <form id="add-habit-form" style="margin-bottom: 1rem;">
+            <div class="form-row" style="gap: 0.5rem;">
+              <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen)" required style="flex: 1;">
+              <button type="submit" class="btn-paddock" style="padding: 0.55rem 0.8rem;">+</button>
+            </div>
+          </form>
           <div id="habits-container" class="habits-list"></div>
         </section>
 
-        <!-- RECHTS: Vergrößerter Wochen-Stundenplan -->
+        <!-- RECHTS: Wochen-Stundenplan -->
         <section class="panel right-panel calendar-panel">
           <h2><span class="icon">📅</span> Wochen-Stundenplan</h2>
           <div id="calendar"></div>
@@ -160,7 +167,7 @@
             <div id="bingo-grid" class="bingo-container"></div>
           </div>
 
-          <!-- Project Progress mit Prozenten, Hinzufügen & Löschen -->
+          <!-- Project Progress -->
           <div class="subcard full-subcard">
             <div class="subcard-header">
               <h3>🏎️ Project &amp; Habit Progress</h3>
