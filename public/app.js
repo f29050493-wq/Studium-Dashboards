@@ -2,21 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initClock();
   initCalendar();
+  initMonthCalendar();
   loadHabits();
   
-  // Section 1 Tracker Initialisierung
+  // Self-Care Modules
   initTrackers();
-
-  // Section 2 Interactive Modules Initialisierung
   initBookshelf();
-  initFinance();
   initBingo();
   initProjectProgress();
 
-  // Section 3 Reflection & Divider Initialisierung
-  initReflectionAndDividers();
-
-  // Formular Handling für neuen Kurs
+  // Formular Handling Kurs
   const addCourseForm = document.getElementById('add-course-form');
   if (addCourseForm) {
     addCourseForm.addEventListener('submit', async (e) => {
@@ -38,12 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
           addCourseForm.reset();
           if (window.calendarObj) window.calendarObj.refetchEvents();
         }
-      } catch (err) { console.error('Fehler:', err); }
+      } catch (err) { console.error(err); }
+    });
+  }
+
+  // Formular Handling Termin
+  const addAppForm = document.getElementById('add-appointment-form');
+  if (addAppForm) {
+    addAppForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('app-title').value;
+      const date = document.getElementById('app-date').value;
+      const color = document.getElementById('app-color').value;
+
+      if (window.monthCalendarObj) {
+        window.monthCalendarObj.addEvent({ title, start: date, allDay: true, backgroundColor: color, borderColor: color });
+        addAppForm.reset();
+      }
     });
   }
 });
 
-/* Navigation Umschalter */
 function initNav() {
   const buttons = document.querySelectorAll('.nav-btn');
   const views = document.querySelectorAll('.dashboard-view');
@@ -58,15 +68,16 @@ function initNav() {
       btn.classList.add('active');
       document.getElementById(targetId).classList.add('active');
 
-      // Kalender-Layout aktualisieren, falls zum Studium-Dashboard gewechselt wird
-      if (targetId === 'view-studium' && window.calendarObj) {
-        setTimeout(() => window.calendarObj.updateSize(), 100);
+      if (targetId === 'view-studium') {
+        setTimeout(() => {
+          if (window.calendarObj) window.calendarObj.updateSize();
+          if (window.monthCalendarObj) window.monthCalendarObj.updateSize();
+        }, 100);
       }
     });
   });
 }
 
-// Live Uhr (Deutsche Zeit / 24h Format)
 function initClock() {
   const clockEl = document.getElementById('telemetry-time');
   setInterval(() => {
@@ -86,7 +97,7 @@ function getPastelColor(hexColor) {
   return `rgb(${Math.round(r * 0.15 + 255 * 0.85)}, ${Math.round(g * 0.15 + 255 * 0.85)}, ${Math.round(b * 0.15 + 255 * 0.85)})`;
 }
 
-/* Großer Stundenplan im deutschen Format */
+/* Großer Stundenplan (Wochenansicht) */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
@@ -98,16 +109,8 @@ function initCalendar() {
     slotMinTime: '08:00:00',
     slotMaxTime: '19:00:00',
     slotDuration: '00:30:00',
-    slotLabelFormat: {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    },
-    eventTimeFormat: {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    },
+    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     headerToolbar: false,
     allDaySlot: false,
     events: '/api/events',
@@ -127,6 +130,42 @@ function initCalendar() {
   });
   calendar.render();
   window.calendarObj = calendar;
+}
+
+/* Monats-Kalender für Termine unten */
+function initMonthCalendar() {
+  const container = document.getElementById('month-calendar');
+  if (!container) return;
+
+  const monthCalendar = new FullCalendar.Calendar(container, {
+    locale: 'de',
+    timeZone: 'Europe/Berlin',
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: ''
+    },
+    editable: true,
+    events: JSON.parse(localStorage.getItem('userAppointments') || '[]'),
+    eventChange: saveAppointments,
+    eventAdd: saveAppointments,
+    eventRemove: saveAppointments
+  });
+
+  monthCalendar.render();
+  window.monthCalendarObj = monthCalendar;
+}
+
+function saveAppointments() {
+  if (!window.monthCalendarObj) return;
+  const events = window.monthCalendarObj.getEvents().map(e => ({
+    title: e.title,
+    start: e.startStr,
+    backgroundColor: e.backgroundColor,
+    borderColor: e.borderColor
+  }));
+  localStorage.setItem('userAppointments', JSON.stringify(events));
 }
 
 async function loadHabits() {
@@ -224,7 +263,7 @@ function initBookshelf() {
       const book = savedBooks[i] || { title: 'Book ' + (i + 1), read: false };
       const bookEl = document.createElement('div');
       bookEl.className = 'book-spine';
-      bookEl.style.height = (70 + (i % 4) * 12) + 'px';
+      bookEl.style.height = (80 + (i % 4) * 14) + 'px';
       bookEl.style.backgroundColor = book.read ? '#e10600' : '#2a2e39';
       bookEl.textContent = book.title;
       bookEl.addEventListener('click', () => {
@@ -241,43 +280,6 @@ function initBookshelf() {
     }
   }
   renderBooks();
-}
-
-function initFinance() {
-  const miniGrid = document.getElementById('no-spend-grid');
-  const savingsGrid = document.getElementById('savings-challenge-container');
-  if (!miniGrid || !savingsGrid) return;
-
-  const savedNoSpend = JSON.parse(localStorage.getItem('noSpendData') || '{}');
-  miniGrid.innerHTML = '';
-  for (let i = 1; i <= 31; i++) {
-    const dayEl = document.createElement('div');
-    dayEl.className = 'mini-day';
-    dayEl.textContent = i;
-    if (savedNoSpend[i]) dayEl.style.backgroundColor = '#00b894';
-    dayEl.addEventListener('click', () => {
-      savedNoSpend[i] = !savedNoSpend[i];
-      localStorage.setItem('noSpendData', JSON.stringify(savedNoSpend));
-      dayEl.style.backgroundColor = savedNoSpend[i] ? '#00b894' : '#1e222b';
-    });
-    miniGrid.appendChild(dayEl);
-  }
-
-  const savedSavings = JSON.parse(localStorage.getItem('savingsData') || '{}');
-  savingsGrid.innerHTML = '';
-  for (let i = 1; i <= 10; i++) {
-    const item = document.createElement('div');
-    item.className = 'savings-item';
-    item.textContent = `${i * 100}€`;
-    if (savedSavings[i]) item.style.backgroundColor = '#ffb800', item.style.color = '#121418';
-    item.addEventListener('click', () => {
-      savedSavings[i] = !savedSavings[i];
-      localStorage.setItem('savingsData', JSON.stringify(savedSavings));
-      item.style.backgroundColor = savedSavings[i] ? '#ffb800' : '#1e222b';
-      item.style.color = savedSavings[i] ? '#121418' : '#fff';
-    });
-    savingsGrid.appendChild(item);
-  }
 }
 
 function initBingo() {
@@ -307,74 +309,54 @@ function initBingo() {
   });
 }
 
+/* Dynamische Projektliste mit Prozenten */
 function initProjectProgress() {
-  const sliders = document.querySelectorAll('.project-slider');
-  sliders.forEach(slider => {
-    const proj = slider.getAttribute('data-proj');
-    slider.value = localStorage.getItem(`proj_${proj}`) || 0;
-    slider.addEventListener('input', (e) => {
-      localStorage.setItem(`proj_${proj}`, e.target.value);
+  const container = document.getElementById('project-list');
+  const addBtn = document.getElementById('add-project-btn');
+  if (!container) return;
+
+  const defaultProjects = [
+    { id: 'f1art', name: 'Acryl-Gemälde / F1 Art', val: 0 },
+    { id: 'crochet', name: 'Amigurumi Häkel-Projekt', val: 0 },
+    { id: 'arduino', name: 'Arduino Microcontroller Code', val: 0 }
+  ];
+
+  let projects = JSON.parse(localStorage.getItem('customProjects') || JSON.stringify(defaultProjects));
+
+  function renderProjects() {
+    container.innerHTML = '';
+    projects.forEach((proj, idx) => {
+      const item = document.createElement('div');
+      item.className = 'project-item';
+      item.innerHTML = `
+        <div class="project-header">
+          <span>${proj.name}</span>
+          <span id="val-${idx}">${proj.val}%</span>
+        </div>
+        <input type="range" min="0" max="100" value="${proj.val}" data-idx="${idx}">
+      `;
+
+      item.querySelector('input').addEventListener('input', (e) => {
+        const newVal = e.target.value;
+        projects[idx].val = newVal;
+        document.getElementById(`val-${idx}`).textContent = `${newVal}%`;
+        localStorage.setItem('customProjects', JSON.stringify(projects));
+      });
+
+      container.appendChild(item);
     });
-  });
-}
-
-const monthData = [
-  { name: 'JANUAR // WINTER SOLSTICE', art: '❄️ 🌙 🌿' },
-  { name: 'FEBRUAR // DEEP FROST', art: '🕯️ ✨ 🪴' },
-  { name: 'MÄRZ // BLOOMING BEGINNINGS', art: '🌱 🌸 🍃' },
-  { name: 'APRIL // SPRING EQUINOX', art: '🌷 ☀️ 🪺' },
-  { name: 'MAI // FLORAL FLOW', art: '🌺 🐝 🌿' },
-  { name: 'JUNI // SUMMER SOLSTICE', art: '☀️ 🌊 🪷' },
-  { name: 'JULI // HIGH SUMMER', art: '🏖️ 🌻 🌙' },
-  { name: 'AUGUST // STARRY NIGHTS', art: '🌌 🌾 🪵' },
-  { name: 'SEPTEMBER // AUTUMN EQUINOX', art: '🍂 🍁 🪵' },
-  { name: 'OKTOBER // HARVEST MOON', art: '🎃 📜 🌖' },
-  { name: 'NOVEMBER // FOGGY DAYS', art: '🌧️ ☕ 🌲' },
-  { name: 'DEZEMBER // WINTER NIGHTS', art: '✨ ❄️ 🌲' }
-];
-
-function initReflectionAndDividers() {
-  let currentMonth = 0;
-  const titleEl = document.getElementById('divider-title');
-  const artEl = document.getElementById('divider-art');
-  
-  const successInput = document.getElementById('reflect-success');
-  const gratitudeInput = document.getElementById('reflect-gratitude');
-  const lessonInput = document.getElementById('reflect-lesson');
-  const yearInput = document.getElementById('year-review-text');
-
-  function loadReflection(m) {
-    currentMonth = m;
-    if (titleEl) titleEl.textContent = monthData[m].name;
-    if (artEl) artEl.innerHTML = `<span style="font-size:2.5rem;">${monthData[m].art}</span>`;
-    
-    const data = JSON.parse(localStorage.getItem(`reflect_${m}`) || '{}');
-    if (successInput) successInput.value = data.success || '';
-    if (gratitudeInput) gratitudeInput.value = data.gratitude || '';
-    if (lessonInput) lessonInput.value = data.lesson || '';
   }
 
-  function saveReflection() {
-    const data = {
-      success: successInput ? successInput.value : '',
-      gratitude: gratitudeInput ? gratitudeInput.value : '',
-      lesson: lessonInput ? lessonInput.value : ''
-    };
-    localStorage.setItem(`reflect_${currentMonth}`, JSON.stringify(data));
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const name = prompt('Name des neuen Projekts:');
+      if (name) {
+        projects.push({ id: 'proj_' + Date.now(), name, val: 0 });
+        localStorage.setItem('customProjects', JSON.stringify(projects));
+        renderProjects();
+      }
+    });
   }
 
-  [successInput, gratitudeInput, lessonInput].forEach(el => {
-    if (el) el.addEventListener('input', saveReflection);
-  });
-
-  if (yearInput) {
-    yearInput.value = localStorage.getItem('year_review') || '';
-    yearInput.addEventListener('input', (e) => localStorage.setItem('year_review', e.target.value));
-  }
-
-  document.querySelectorAll('.btn-month').forEach(btn => {
-    btn.addEventListener('click', (e) => loadReflection(parseInt(e.target.getAttribute('data-m'))));
-  });
-
-  loadReflection(0);
+  renderProjects();
 }

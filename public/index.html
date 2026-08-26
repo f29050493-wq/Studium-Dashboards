@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard & Self-Care Studio</title>
+  <title>Race Control &amp; Self-Care Studio</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -16,7 +16,7 @@
     </div>
     <nav class="nav-menu">
       <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Stundenplan</button>
-      <button class="nav-btn" data-target="view-selfcare">✨ Self-Care &amp; Journal</button>
+      <button class="nav-btn" data-target="view-selfcare">✨ Self-Care Studio</button>
     </nav>
     <div class="telemetry-bar">
       <div class="telemetry-item">
@@ -79,19 +79,42 @@
           <div id="habits-container" class="habits-list"></div>
         </section>
 
-        <!-- RECHTS: Vergrößerter Stundenplan -->
+        <!-- RECHTS: Vergrößerter Wochen-Stundenplan -->
         <section class="panel right-panel calendar-panel">
-          <h2><span class="icon">📅</span> Rennkalender &amp; Stundenplan</h2>
+          <h2><span class="icon">📅</span> Wochen-Stundenplan</h2>
           <div id="calendar"></div>
         </section>
       </div>
+
+      <!-- UNTEN: Monats-Kalender für Termine & Aktivitäten -->
+      <section class="panel full-width-panel" style="margin-top: 1.5rem;">
+        <h2><span class="icon">🗓️</span> Termine &amp; Aktivitäts-Kalender</h2>
+        
+        <form id="add-appointment-form" class="appointment-form">
+          <div class="form-group">
+            <label for="app-title">Termin / Aktivität</label>
+            <input type="text" id="app-title" placeholder="z.B. Zahnarzt, Wismar Trip, Prüfung..." required>
+          </div>
+          <div class="form-group">
+            <label for="app-date">Datum</label>
+            <input type="date" id="app-date" required>
+          </div>
+          <div class="form-group">
+            <label for="app-color">Farbe</label>
+            <input type="color" id="app-color" value="#ffb800">
+          </div>
+          <button type="submit" class="btn-paddock" style="align-self: flex-end;">+ TERMIN EINTRAGEN</button>
+        </form>
+
+        <div id="month-calendar" style="margin-top: 1.5rem;"></div>
+      </section>
     </div>
 
     <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
     <div id="view-selfcare" class="dashboard-view">
-      <!-- SECTION 1: ELEGANT 12x31 TRACKERS -->
+      <!-- 12x31 TRACKERS -->
       <section class="panel full-width-panel" style="margin-bottom: 1.5rem;">
-        <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
+        <h2><span class="icon">✨</span> 1. Trackers</h2>
         
         <div class="tracker-selector">
           <label for="tracker-type-select">Tracker auswählen:</label>
@@ -111,8 +134,8 @@
         <div id="interactive-tracker-container"></div>
       </section>
 
-      <!-- SECTION 2: FINE-ART INTERACTIVE PAGES -->
-      <section class="panel full-width-panel" style="margin-bottom: 1.5rem;">
+      <!-- FINE-ART INTERACTIVE PAGES -->
+      <section class="panel full-width-panel">
         <h2><span class="icon">🎨</span> 2. Fine-Art Interactive Pages</h2>
         
         <div class="interactive-subgrid">
@@ -123,18 +146,6 @@
             <div id="bookshelf-container" class="bookshelf"></div>
           </div>
 
-          <!-- Mindful Finance -->
-          <div class="subcard">
-            <h3>💰 Mindful Finance</h3>
-            <p class="subtext">Spar-Challenge &amp; No-Spend Tracker</p>
-            <div class="finance-box">
-              <h4>No-Spend Days (Dieser Monat)</h4>
-              <div id="no-spend-grid" class="mini-grid"></div>
-              <h4 style="margin-top: 1rem;">Spar-Challenge (Ziel: 1.000€)</h4>
-              <div id="savings-challenge-container" class="savings-grid"></div>
-            </div>
-          </div>
-
           <!-- Self-Care Bingo -->
           <div class="subcard">
             <h3>🧘 Self-Care Bingo</h3>
@@ -142,69 +153,15 @@
             <div id="bingo-grid" class="bingo-container"></div>
           </div>
 
-          <!-- Project Progress -->
-          <div class="subcard">
-            <h3>🏎️ Habit &amp; Project Progress</h3>
-            <p class="subtext">Fortschritt deiner aktuellen Projekte</p>
-            <div class="project-progress-list">
-              <div class="project-item">
-                <span>Acryl-Gemälde / F1 Art</span>
-                <input type="range" class="project-slider" data-proj="f1art" min="0" max="100">
-              </div>
-              <div class="project-item">
-                <span>Amigurumi Häkel-Projekt</span>
-                <input type="range" class="project-slider" data-proj="crochet" min="0" max="100">
-              </div>
-              <div class="project-item">
-                <span>Arduino Microcontroller Code</span>
-                <input type="range" class="project-slider" data-proj="arduino" min="0" max="100">
-              </div>
+          <!-- Project Progress mit Prozenten & Hinzufügen-Button -->
+          <div class="subcard full-subcard">
+            <div class="subcard-header">
+              <h3>🏎️ Project &amp; Habit Progress</h3>
+              <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
             </div>
+            <p class="subtext">Fortschritt deiner aktuellen Projekte in Prozent (%)</p>
+            <div id="project-list" class="project-progress-list"></div>
           </div>
-        </div>
-      </section>
-
-      <!-- SECTION 3: SEASONAL DIVIDERS & REFLECTION -->
-      <section class="panel full-width-panel">
-        <h2><span class="icon">🌙</span> 3. Seasonal Dividers &amp; Monthly Reflection</h2>
-        
-        <div class="reflection-layout">
-          <div class="divider-preview">
-            <h3 id="divider-title">JANUAR // WINTER SOLSTICE</h3>
-            <div id="divider-art" class="botanical-art"></div>
-            <div class="month-buttons">
-              <button class="btn-month" data-m="0">Jan</button>
-              <button class="btn-month" data-m="1">Feb</button>
-              <button class="btn-month" data-m="2">Mär</button>
-              <button class="btn-month" data-m="3">Apr</button>
-              <button class="btn-month" data-m="4">Mai</button>
-              <button class="btn-month" data-m="5">Jun</button>
-              <button class="btn-month" data-m="6">Jul</button>
-              <button class="btn-month" data-m="7">Aug</button>
-              <button class="btn-month" data-m="8">Sep</button>
-              <button class="btn-month" data-m="9">Okt</button>
-              <button class="btn-month" data-m="10">Nov</button>
-              <button class="btn-month" data-m="11">Dez</button>
-            </div>
-          </div>
-
-          <div class="reflection-form">
-            <h3>Monthly Reflection</h3>
-            <label>Was war mein größter Erfolg in diesem Monat?</label>
-            <textarea id="reflect-success" rows="2" placeholder="Deine Gedanken..."></textarea>
-            
-            <label>Wofür bin ich diesen Monat besonders dankbar?</label>
-            <textarea id="reflect-gratitude" rows="2" placeholder="Deine Gedanken..."></textarea>
-
-            <label>Welche Lektion nehme ich mit in den nächsten Monat?</label>
-            <textarea id="reflect-lesson" rows="2" placeholder="Deine Gedanken..."></textarea>
-          </div>
-        </div>
-
-        <!-- Year in Review -->
-        <div class="year-in-review">
-          <h3>✨ Year in Review &amp; Highlights</h3>
-          <textarea id="year-review-text" rows="4" placeholder="Schreibe hier deine schönsten Erinnerungen, Meilensteine und Highlights des Jahres auf..."></textarea>
         </div>
       </section>
     </div>
