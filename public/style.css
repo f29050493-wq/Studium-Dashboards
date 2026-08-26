@@ -189,6 +189,18 @@ input[type="color"] {
   cursor: pointer;
 }
 
+.btn-delete {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.btn-delete:hover { color: var(--accent-red); }
+
 .habits-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .habit-card {
   display: flex; justify-content: space-between; align-items: center;
@@ -205,6 +217,39 @@ input[type="color"] {
 #interactive-tracker-container { overflow-x: auto; background: #fafafa; padding: 1rem; border-radius: 6px; }
 .interactive-cell { cursor: pointer; transition: fill 0.2s; }
 .interactive-cell:hover { stroke: #121418 !important; stroke-width: 1.5px !important; }
+
+/* POPUP MENU FÜR TRACKER */
+.tracker-menu {
+  position: absolute;
+  z-index: 1000;
+  background: #1e222b;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.tracker-menu.hidden { display: none; }
+
+.tracker-menu-btn {
+  background: #121418;
+  color: #fff;
+  border: 1px solid var(--btn-color, #444);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tracker-menu-btn:hover {
+  background: var(--btn-color, #333);
+  color: #fff;
+}
 
 .interactive-subgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .subcard { background: var(--bg-dark); padding: 1.25rem; border-radius: 6px; border: 1px solid var(--border-color); }
@@ -223,4 +268,5 @@ input[type="color"] {
 /* Project Progress */
 .project-progress-list { display: flex; flex-direction: column; gap: 1rem; }
 .project-item { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; background: #1e222b; padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); }
-.project-header { display: flex; justify-content: space-between; font-weight: bold; }
+.project-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+.project-meta { display: flex; align-items: center; gap: 0.8rem; }

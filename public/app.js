@@ -198,12 +198,21 @@ function initTrackers() {
   if (!select) return;
   select.addEventListener('change', () => renderTracker(select.value));
   renderTracker('mood');
+
+  // Menü schließen, wenn man außerhalb klickt
+  document.addEventListener('click', (e) => {
+    const popup = document.getElementById('tracker-popup-menu');
+    if (popup && !popup.contains(e.target) && !e.target.classList.contains('interactive-cell')) {
+      popup.classList.add('hidden');
+    }
+  });
 }
 
 function renderTracker(type) {
   const config = trackerConfigs[type];
   const container = document.getElementById('interactive-tracker-container');
   const legendDisplay = document.getElementById('tracker-legend-display');
+  const popup = document.getElementById('tracker-popup-menu');
   if (!container || !config) return;
 
   legendDisplay.innerHTML = config.labels.map((lbl, idx) => `
@@ -239,15 +248,48 @@ function renderTracker(type) {
   svgHtml += `</svg>`;
   container.innerHTML = svgHtml;
 
+  // Interaktivität mit Popup-Menü
   container.querySelectorAll('.interactive-cell').forEach(cell => {
     cell.addEventListener('click', (e) => {
-      const key = e.target.getAttribute('data-key');
-      let lvl = parseInt(e.target.getAttribute('data-level') || '0');
-      lvl = (lvl + 1) % 6;
-      e.target.setAttribute('data-level', lvl);
-      e.target.setAttribute('fill', lvl === 0 ? 'none' : config.colors[lvl]);
-      savedData[key] = lvl;
-      localStorage.setItem(`tracker_${type}`, JSON.stringify(savedData));
+      e.stopPropagation();
+      const targetCell = e.target;
+      const key = targetCell.getAttribute('data-key');
+
+      // Pop-up Menü-Inhalt aufbauen
+      let menuHtml = config.labels.map((lbl, idx) => {
+        const levelNum = idx + 1;
+        const color = config.colors[levelNum];
+        return `
+          <button class="tracker-menu-btn" style="--btn-color: ${color}" data-level="${levelNum}">
+            ${lbl}
+          </button>
+        `;
+      }).join('');
+
+      // Option zum Zurücksetzen / Leeren
+      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #555" data-level="0">✕ Zurücksetzen</button>`;
+
+      popup.innerHTML = menuHtml;
+
+      // Positionierung relativ zum Mutterpanel
+      const parentRect = popup.parentElement.getBoundingClientRect();
+      popup.style.left = `${e.clientX - parentRect.left + 10}px`;
+      popup.style.top = `${e.clientY - parentRect.top + 10}px`;
+      popup.classList.remove('hidden');
+
+      // Klicks im Menü verarbeiten
+      popup.querySelectorAll('.tracker-menu-btn').forEach(btn => {
+        btn.onclick = () => {
+          const selectedLvl = parseInt(btn.getAttribute('data-level'));
+          targetCell.setAttribute('data-level', selectedLvl);
+          targetCell.setAttribute('fill', selectedLvl === 0 ? 'none' : config.colors[selectedLvl]);
+
+          savedData[key] = selectedLvl;
+          localStorage.setItem(`tracker_${type}`, JSON.stringify(savedData));
+
+          popup.classList.add('hidden');
+        };
+      });
     });
   });
 }
@@ -309,7 +351,7 @@ function initBingo() {
   });
 }
 
-/* Dynamische Projektliste mit Prozenten */
+/* Dynamische Projektliste mit Prozenten, Hinzufügen & Löschen */
 function initProjectProgress() {
   const container = document.getElementById('project-list');
   const addBtn = document.getElementById('add-project-btn');
@@ -331,16 +373,27 @@ function initProjectProgress() {
       item.innerHTML = `
         <div class="project-header">
           <span>${proj.name}</span>
-          <span id="val-${idx}">${proj.val}%</span>
+          <div class="project-meta">
+            <span id="val-${idx}">${proj.val}%</span>
+            <button class="btn-delete" data-idx="${idx}" title="Projekt löschen">✕</button>
+          </div>
         </div>
         <input type="range" min="0" max="100" value="${proj.val}" data-idx="${idx}">
       `;
 
-      item.querySelector('input').addEventListener('input', (e) => {
+      // Event-Listener zum Ändern des Prozentwerts
+      item.querySelector('input[type="range"]').addEventListener('input', (e) => {
         const newVal = e.target.value;
         projects[idx].val = newVal;
         document.getElementById(`val-${idx}`).textContent = `${newVal}%`;
         localStorage.setItem('customProjects', JSON.stringify(projects));
+      });
+
+      // Event-Listener zum Löschen des Projekts
+      item.querySelector('.btn-delete').addEventListener('click', () => {
+        projects.splice(idx, 1);
+        localStorage.setItem('customProjects', JSON.stringify(projects));
+        renderProjects();
       });
 
       container.appendChild(item);
@@ -349,7 +402,7 @@ function initProjectProgress() {
 
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      const name = prompt('Name des neuen Projekts:');
+      const name = prompt('Name des neuen Projekts / Habits:');
       if (name) {
         projects.push({ id: 'proj_' + Date.now(), name, val: 0 });
         localStorage.setItem('customProjects', JSON.stringify(projects));

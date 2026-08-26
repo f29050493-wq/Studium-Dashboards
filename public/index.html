@@ -113,8 +113,8 @@
     <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
     <div id="view-selfcare" class="dashboard-view">
       <!-- 12x31 TRACKERS -->
-      <section class="panel full-width-panel" style="margin-bottom: 1.5rem;">
-        <h2><span class="icon">✨</span> 1. Trackers</h2>
+      <section class="panel full-width-panel" style="margin-bottom: 1.5rem; position: relative;">
+        <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
         
         <div class="tracker-selector">
           <label for="tracker-type-select">Tracker auswählen:</label>
@@ -132,6 +132,9 @@
 
         <div class="tracker-legend" id="tracker-legend-display"></div>
         <div id="interactive-tracker-container"></div>
+
+        <!-- Pop-up Menü für Schnellauswahl -->
+        <div id="tracker-popup-menu" class="tracker-menu hidden"></div>
       </section>
 
       <!-- FINE-ART INTERACTIVE PAGES -->
@@ -153,13 +156,13 @@
             <div id="bingo-grid" class="bingo-container"></div>
           </div>
 
-          <!-- Project Progress mit Prozenten & Hinzufügen-Button -->
+          <!-- Project Progress mit Prozenten, Hinzufügen & Löschen -->
           <div class="subcard full-subcard">
             <div class="subcard-header">
               <h3>🏎️ Project &amp; Habit Progress</h3>
               <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
             </div>
-            <p class="subtext">Fortschritt deiner aktuellen Projekte in Prozent (%)</p>
+            <p class="subtext">Fortschritt deiner aktuellen Projekte in Prozent (%) verwalten</p>
             <div id="project-list" class="project-progress-list"></div>
           </div>
         </div>
