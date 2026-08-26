@@ -3,205 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Race Control & Self-Care Studio</title>
+  <title>Dashboard & Self-Care Studio</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="dashboard-header">
+  <!-- NAVIGATION OBEN -->
+  <header class="top-nav">
     <div class="brand">
       <span class="flag-icon">🏁</span>
-      <h1>RACE CONTROL <span>// STUDIUM & SELF-CARE DASHBOARD</span></h1>
+      <h1>RACE CONTROL <span>// DASHBOARD</span></h1>
     </div>
+    <nav class="nav-menu">
+      <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Stundenplan</button>
+      <button class="nav-btn" data-target="view-selfcare">✨ Self-Care &amp; Journal</button>
+    </nav>
     <div class="telemetry-bar">
       <div class="telemetry-item">
-        <span class="label">CURRENT TIME</span>
+        <span class="label">UHRZEIT (DE)</span>
         <span class="value" id="telemetry-time">00:00:00</span>
       </div>
-      <div class="telemetry-item">
-        <span class="label">NEXT STINT</span>
-        <span class="value highlight" id="telemetry-next">KEINE VORLESUNG</span>
+    </div>
+  </header>
+
+  <main class="content-container">
+    <!-- VIEW 1: STUDIUM DASHBOARD -->
+    <div id="view-studium" class="dashboard-view active">
+      <div class="dashboard-grid">
+        <!-- LINKS: Kurs hinzufügen & Pit Stop Checklist -->
+        <section class="panel left-panel">
+          <h2><span class="icon">🏎️</span> Kurs hinzufügen</h2>
+          <form id="add-course-form">
+            <div class="form-group">
+              <label for="course-title">Kursname / Fach</label>
+              <input type="text" id="course-title" placeholder="z.B. Regelungstechnik" required>
+            </div>
+            <div class="form-group">
+              <label for="course-type">Veranstaltungstyp</label>
+              <select id="course-type">
+                <option value="vorlesung">Vorlesung (Hauptfarbe)</option>
+                <option value="labor">Labor / Übung (Pastell)</option>
+                <option value="tutorium">Tutorium (Pastell)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="course-day">Wochentag</label>
+                <select id="course-day">
+                  <option value="1">Montag</option>
+                  <option value="2">Dienstag</option>
+                  <option value="3">Mittwoch</option>
+                  <option value="4">Donnerstag</option>
+                  <option value="5">Freitag</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="course-color">Team-Farbe</label>
+                <input type="color" id="course-color" value="#e10600">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="course-start">Startzeit</label>
+                <input type="time" id="course-start" value="08:00" required>
+              </div>
+              <div class="form-group">
+                <label for="course-end">Endzeit</label>
+                <input type="time" id="course-end" value="09:30" required>
+              </div>
+            </div>
+            <button type="submit" class="btn-paddock">+ KURS EINTRAGEN</button>
+          </form>
+
+          <h2 style="margin-top: 2rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
+          <div id="habits-container" class="habits-list"></div>
+        </section>
+
+        <!-- RECHTS: Vergrößerter Stundenplan -->
+        <section class="panel right-panel calendar-panel">
+          <h2><span class="icon">📅</span> Rennkalender &amp; Stundenplan</h2>
+          <div id="calendar"></div>
+        </section>
       </div>
     </div>
-  </div>
 
-  <main class="dashboard-grid">
-    <!-- LINKS: Kurs hinzufügen & Pit Stop Checklist -->
-    <section class="panel left-panel">
-      <h2><span class="icon">🏎️</span> Kurs hinzufügen</h2>
-      <form id="add-course-form">
-        <div class="form-group">
-          <label for="course-title">Kursname / Fach</label>
-          <input type="text" id="course-title" placeholder="z.B. Regelungstechnik" required>
-        </div>
-        <div class="form-group">
-          <label for="course-type">Veranstaltungstyp</label>
-          <select id="course-type">
-            <option value="vorlesung">Vorlesung (Hauptfarbe)</option>
-            <option value="labor">Labor / Übung (Pastell)</option>
-            <option value="tutorium">Tutorium (Pastell)</option>
+    <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
+    <div id="view-selfcare" class="dashboard-view">
+      <!-- SECTION 1: ELEGANT 12x31 TRACKERS -->
+      <section class="panel full-width-panel" style="margin-bottom: 1.5rem;">
+        <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
+        
+        <div class="tracker-selector">
+          <label for="tracker-type-select">Tracker auswählen:</label>
+          <select id="tracker-type-select">
+            <option value="mood">Mood &amp; Energy Flow</option>
+            <option value="weather">Weather &amp; Seasons</option>
+            <option value="health">Health &amp; Body Mind</option>
+            <option value="focus">Productivity &amp; Focus</option>
+            <option value="sleep">Sleep &amp; Rest</option>
+            <option value="movement">Movement &amp; Fitness</option>
+            <option value="connection">Social &amp; Connection</option>
+            <option value="nourishment">Nourishment &amp; Water</option>
           </select>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="course-day">Wochentag</label>
-            <select id="course-day">
-              <option value="1">Montag</option>
-              <option value="2">Dienstag</option>
-              <option value="3">Mittwoch</option>
-              <option value="4">Donnerstag</option>
-              <option value="5">Freitag</option>
-            </select>
+
+        <div class="tracker-legend" id="tracker-legend-display"></div>
+        <div id="interactive-tracker-container"></div>
+      </section>
+
+      <!-- SECTION 2: FINE-ART INTERACTIVE PAGES -->
+      <section class="panel full-width-panel" style="margin-bottom: 1.5rem;">
+        <h2><span class="icon">🎨</span> 2. Fine-Art Interactive Pages</h2>
+        
+        <div class="interactive-subgrid">
+          <!-- Bookshelf -->
+          <div class="subcard">
+            <h3>📚 Bookshelf / Reading Tracker</h3>
+            <p class="subtext">Klicke ein Buch an, um den Titel einzugeben oder den Status zu ändern.</p>
+            <div id="bookshelf-container" class="bookshelf"></div>
           </div>
-          <div class="form-group">
-            <label for="course-color">Team-Farbe</label>
-            <input type="color" id="course-color" value="#e10600">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="course-start">Startzeit</label>
-            <input type="time" id="course-start" value="08:00" required>
-          </div>
-          <div class="form-group">
-            <label for="course-end">Endzeit</label>
-            <input type="time" id="course-end" value="09:30" required>
-          </div>
-        </div>
-        <button type="submit" class="btn-paddock">+ KURS EINTRAGEN</button>
-      </form>
 
-      <h2 style="margin-top: 2rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
-      <div id="habits-container" class="habits-list"></div>
-    </section>
-
-    <!-- RECHTS: Rennkalender -->
-    <section class="panel right-panel">
-      <h2><span class="icon">📅</span> Rennkalender (Stundenplan)</h2>
-      <div id="calendar"></div>
-    </section>
-
-    <!-- SECTION 1: ELEGANT 12x31 TRACKERS -->
-    <section class="panel full-width-panel">
-      <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
-      
-      <div class="tracker-selector">
-        <label for="tracker-type-select">Tracker auswählen:</label>
-        <select id="tracker-type-select">
-          <option value="mood">Mood & Energy Flow</option>
-          <option value="weather">Weather & Seasons</option>
-          <option value="health">Health & Body Mind</option>
-          <option value="focus">Productivity & Focus</option>
-          <option value="sleep">Sleep & Rest</option>
-          <option value="movement">Movement & Fitness</option>
-          <option value="connection">Social & Connection</option>
-          <option value="nourishment">Nourishment & Water</option>
-        </select>
-      </div>
-
-      <div class="tracker-legend" id="tracker-legend-display"></div>
-      <div id="interactive-tracker-container"></div>
-    </section>
-
-    <!-- SECTION 2: FINE-ART INTERACTIVE PAGES -->
-    <section class="panel full-width-panel">
-      <h2><span class="icon">🎨</span> 2. Fine-Art Interactive Pages</h2>
-      
-      <div class="interactive-subgrid">
-        <!-- Reading Tracker / Bookshelf -->
-        <div class="subcard">
-          <h3>📚 Bookshelf / Reading Tracker</h3>
-          <p class="subtext">Klicke ein Buch an, um den Titel einzugeben oder den Lesestatus einzufärben.</p>
-          <div id="bookshelf-container" class="bookshelf"></div>
-        </div>
-
-        <!-- Mindful Finance -->
-        <div class="subcard">
-          <h3>💰 Mindful Finance</h3>
-          <p class="subtext">Spar-Challenge &amp; No-Spend Tracker</p>
-          <div class="finance-box">
-            <h4>No-Spend Days (Dieser Monat)</h4>
-            <div id="no-spend-grid" class="mini-grid"></div>
-            <h4 style="margin-top: 1rem;">Spar-Challenge (Ziel: 1.000€)</h4>
-            <div id="savings-challenge-container" class="savings-grid"></div>
-          </div>
-        </div>
-
-        <!-- Self-Care Bingo -->
-        <div class="subcard">
-          <h3>🧘 Self-Care Bingo</h3>
-          <p class="subtext">Klicke verfülle Felder an, wenn du sie erreicht hast.</p>
-          <div id="bingo-grid" class="bingo-container"></div>
-        </div>
-
-        <!-- Hobby & Project Progress -->
-        <div class="subcard">
-          <h3>🏎️ Habit & Project Progress</h3>
-          <p class="subtext">Fortschritt deiner aktuellen Projekte</p>
-          <div class="project-progress-list">
-            <div class="project-item">
-              <span>Acryl-Gemälde / F1 Art</span>
-              <input type="range" class="project-slider" data-proj="f1art" min="0" max="100">
+          <!-- Mindful Finance -->
+          <div class="subcard">
+            <h3>💰 Mindful Finance</h3>
+            <p class="subtext">Spar-Challenge &amp; No-Spend Tracker</p>
+            <div class="finance-box">
+              <h4>No-Spend Days (Dieser Monat)</h4>
+              <div id="no-spend-grid" class="mini-grid"></div>
+              <h4 style="margin-top: 1rem;">Spar-Challenge (Ziel: 1.000€)</h4>
+              <div id="savings-challenge-container" class="savings-grid"></div>
             </div>
-            <div class="project-item">
-              <span>Amigurumi Häkel-Projekt</span>
-              <input type="range" class="project-slider" data-proj="crochet" min="0" max="100">
-            </div>
-            <div class="project-item">
-              <span>Arduino Microcontroller Code</span>
-              <input type="range" class="project-slider" data-proj="arduino" min="0" max="100">
+          </div>
+
+          <!-- Self-Care Bingo -->
+          <div class="subcard">
+            <h3>🧘 Self-Care Bingo</h3>
+            <p class="subtext">Achtsame Alltagsimpulse abhaken</p>
+            <div id="bingo-grid" class="bingo-container"></div>
+          </div>
+
+          <!-- Project Progress -->
+          <div class="subcard">
+            <h3>🏎️ Habit &amp; Project Progress</h3>
+            <p class="subtext">Fortschritt deiner aktuellen Projekte</p>
+            <div class="project-progress-list">
+              <div class="project-item">
+                <span>Acryl-Gemälde / F1 Art</span>
+                <input type="range" class="project-slider" data-proj="f1art" min="0" max="100">
+              </div>
+              <div class="project-item">
+                <span>Amigurumi Häkel-Projekt</span>
+                <input type="range" class="project-slider" data-proj="crochet" min="0" max="100">
+              </div>
+              <div class="project-item">
+                <span>Arduino Microcontroller Code</span>
+                <input type="range" class="project-slider" data-proj="arduino" min="0" max="100">
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- SECTION 3: SEASONAL DIVIDERS & REFLECTION -->
-    <section class="panel full-width-panel">
-      <h2><span class="icon">🌙</span> 3. Seasonal Dividers &amp; Monthly Reflection</h2>
-      
-      <div class="reflection-layout">
-        <div class="divider-preview">
-          <h3 id="divider-title">JANUAR // WINTER SOLSTICE</h3>
-          <div id="divider-art" class="botanical-art"></div>
-          <div class="month-buttons">
-            <button class="btn-month" data-m="0">Jan</button>
-            <button class="btn-month" data-m="1">Feb</button>
-            <button class="btn-month" data-m="2">Mär</button>
-            <button class="btn-month" data-m="3">Apr</button>
-            <button class="btn-month" data-m="4">Mai</button>
-            <button class="btn-month" data-m="5">Jun</button>
-            <button class="btn-month" data-m="6">Jul</button>
-            <button class="btn-month" data-m="7">Aug</button>
-            <button class="btn-month" data-m="8">Sep</button>
-            <button class="btn-month" data-m="9">Okt</button>
-            <button class="btn-month" data-m="10">Nov</button>
-            <button class="btn-month" data-m="11">Dez</button>
+      <!-- SECTION 3: SEASONAL DIVIDERS & REFLECTION -->
+      <section class="panel full-width-panel">
+        <h2><span class="icon">🌙</span> 3. Seasonal Dividers &amp; Monthly Reflection</h2>
+        
+        <div class="reflection-layout">
+          <div class="divider-preview">
+            <h3 id="divider-title">JANUAR // WINTER SOLSTICE</h3>
+            <div id="divider-art" class="botanical-art"></div>
+            <div class="month-buttons">
+              <button class="btn-month" data-m="0">Jan</button>
+              <button class="btn-month" data-m="1">Feb</button>
+              <button class="btn-month" data-m="2">Mär</button>
+              <button class="btn-month" data-m="3">Apr</button>
+              <button class="btn-month" data-m="4">Mai</button>
+              <button class="btn-month" data-m="5">Jun</button>
+              <button class="btn-month" data-m="6">Jul</button>
+              <button class="btn-month" data-m="7">Aug</button>
+              <button class="btn-month" data-m="8">Sep</button>
+              <button class="btn-month" data-m="9">Okt</button>
+              <button class="btn-month" data-m="10">Nov</button>
+              <button class="btn-month" data-m="11">Dez</button>
+            </div>
+          </div>
+
+          <div class="reflection-form">
+            <h3>Monthly Reflection</h3>
+            <label>Was war mein größter Erfolg in diesem Monat?</label>
+            <textarea id="reflect-success" rows="2" placeholder="Deine Gedanken..."></textarea>
+            
+            <label>Wofür bin ich diesen Monat besonders dankbar?</label>
+            <textarea id="reflect-gratitude" rows="2" placeholder="Deine Gedanken..."></textarea>
+
+            <label>Welche Lektion nehme ich mit in den nächsten Monat?</label>
+            <textarea id="reflect-lesson" rows="2" placeholder="Deine Gedanken..."></textarea>
           </div>
         </div>
 
-        <div class="reflection-form">
-          <h3>Monthly Reflection</h3>
-          <label>Was war mein größter Erfolg in diesem Monat?</label>
-          <textarea id="reflect-success" rows="2" placeholder="Deine Gedanken..."></textarea>
-          
-          <label>Wofür bin ich diesen Monat besonders dankbar?</label>
-          <textarea id="reflect-gratitude" rows="2" placeholder="Deine Gedanken..."></textarea>
-
-          <label>Welche Lektion nehme ich mit in den nächsten Monat?</label>
-          <textarea id="reflect-lesson" rows="2" placeholder="Deine Gedanken..."></textarea>
+        <!-- Year in Review -->
+        <div class="year-in-review">
+          <h3>✨ Year in Review &amp; Highlights</h3>
+          <textarea id="year-review-text" rows="4" placeholder="Schreibe hier deine schönsten Erinnerungen, Meilensteine und Highlights des Jahres auf..."></textarea>
         </div>
-      </div>
-
-      <!-- Year in Review -->
-      <div class="year-in-review">
-        <h3>✨ Year in Review &amp; Highlights</h3>
-        <textarea id="year-review-text" rows="4" placeholder="Schreibe hier deine schönsten Erinnerungen, Meilensteine und Highlights des Jahres auf..."></textarea>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/de.global.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

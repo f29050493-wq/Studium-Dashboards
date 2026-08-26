@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  initNav();
   initClock();
   initCalendar();
   loadHabits();
@@ -42,12 +43,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Live Uhr
+/* Navigation Umschalter */
+function initNav() {
+  const buttons = document.querySelectorAll('.nav-btn');
+  const views = document.querySelectorAll('.dashboard-view');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+
+      buttons.forEach(b => b.classList.remove('active'));
+      views.forEach(v => v.classList.remove('active'));
+
+      btn.classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+
+      // Kalender-Layout aktualisieren, falls zum Studium-Dashboard gewechselt wird
+      if (targetId === 'view-studium' && window.calendarObj) {
+        setTimeout(() => window.calendarObj.updateSize(), 100);
+      }
+    });
+  });
+}
+
+// Live Uhr (Deutsche Zeit / 24h Format)
 function initClock() {
   const clockEl = document.getElementById('telemetry-time');
   setInterval(() => {
     const now = new Date();
-    if (clockEl) clockEl.textContent = now.toTimeString().split(' ')[0];
+    if (clockEl) {
+      clockEl.textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
   }, 1000);
 }
 
@@ -60,14 +86,28 @@ function getPastelColor(hexColor) {
   return `rgb(${Math.round(r * 0.15 + 255 * 0.85)}, ${Math.round(g * 0.15 + 255 * 0.85)}, ${Math.round(b * 0.15 + 255 * 0.85)})`;
 }
 
+/* Großer Stundenplan im deutschen Format */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
   const calendar = new FullCalendar.Calendar(calendarEl, {
+    locale: 'de',
+    timeZone: 'Europe/Berlin',
     initialView: 'timeGridWeek',
     hiddenDays: [0, 6],
     slotMinTime: '08:00:00',
-    slotMaxTime: '18:00:00',
+    slotMaxTime: '19:00:00',
+    slotDuration: '00:30:00',
+    slotLabelFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    },
+    eventTimeFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    },
     headerToolbar: false,
     allDaySlot: false,
     events: '/api/events',
@@ -102,48 +142,16 @@ async function loadHabits() {
   } catch (err) { console.error(err); }
 }
 
-/* --- SECTION 1: 12x31 ELEGANT TRACKERS --- */
+/* TRACKERS & INTERACTIVE MODULES */
 const trackerConfigs = {
-  mood: {
-    name: "Mood & Energy Flow",
-    colors: { '1': '#aa1111', '2': '#ff8c00', '3': '#ffb800', '4': '#2ed573', '5': '#1e90ff' },
-    labels: ['01 Rest', '02 Low', '03 Balanced', '04 Good', '05 Radiant']
-  },
-  weather: {
-    name: "Weather & Seasons",
-    colors: { '1': '#74b9ff', '2': '#00cec9', '3': '#ffeaa7', '4': '#fdcb6e', '5': '#6c5ce7' },
-    labels: ['Rainy', 'Cloudy', 'Sunny', 'Hot', 'Stormy']
-  },
-  health: {
-    name: "Health & Body Mind",
-    colors: { '1': '#e74c3c', '2': '#e67e22', '3': '#f1c40f', '4': '#2ecc71', '5': '#1abc9c' },
-    labels: ['Pain/Sick', 'Fatigued', 'Okay', 'Strong', 'Vital']
-  },
-  focus: {
-    name: "Productivity & Focus",
-    colors: { '1': '#d63031', '2': '#fd79a8', '3': '#a29bfe', '4': '#0984e3', '5': '#00b894' },
-    labels: ['Procrastinated', 'Low Focus', 'Normal', 'Deep Work', 'Flow State']
-  },
-  sleep: {
-    name: "Sleep & Rest",
-    colors: { '1': '#2d3436', '2': '#636e72', '3': '#b2bec3', '4': '#0984e3', '5': '#6c5ce7' },
-    labels: ['< 5h', '5-6h', '6-7h', '7-8h', '8h+ / Rested']
-  },
-  movement: {
-    name: "Movement & Fitness",
-    colors: { '1': '#b2bec3', '2': '#74b9ff', '3': '#55efc4', '4': '#ffeaa7', '5': '#ff7675' },
-    labels: ['Rest Day', 'Walk', 'Yoga/Stretch', 'Run', 'Gym Session']
-  },
-  connection: {
-    name: "Social & Connection",
-    colors: { '1': '#fd79a8', '2': '#e84393', '3': '#6c5ce7', '4': '#00cec9', '5': '#fdcb6e' },
-    labels: ['Solo Time', 'Partner', 'Friends', 'Family', 'Community']
-  },
-  nourishment: {
-    name: "Nourishment & Water",
-    colors: { '1': '#ff7675', '2': '#ffeaa7', '3': '#74b9ff', '4': '#55efc4', '5': '#00b894' },
-    labels: ['Low Water', 'Balanced', 'Hydrated', 'No-Sugar', 'Clean Eating']
-  }
+  mood: { name: "Mood & Energy Flow", colors: { '1': '#aa1111', '2': '#ff8c00', '3': '#ffb800', '4': '#2ed573', '5': '#1e90ff' }, labels: ['01 Rest', '02 Low', '03 Balanced', '04 Good', '05 Radiant'] },
+  weather: { name: "Weather & Seasons", colors: { '1': '#74b9ff', '2': '#00cec9', '3': '#ffeaa7', '4': '#fdcb6e', '5': '#6c5ce7' }, labels: ['Rainy', 'Cloudy', 'Sunny', 'Hot', 'Stormy'] },
+  health: { name: "Health & Body Mind", colors: { '1': '#e74c3c', '2': '#e67e22', '3': '#f1c40f', '4': '#2ecc71', '5': '#1abc9c' }, labels: ['Pain/Sick', 'Fatigued', 'Okay', 'Strong', 'Vital'] },
+  focus: { name: "Productivity & Focus", colors: { '1': '#d63031', '2': '#fd79a8', '3': '#a29bfe', '4': '#0984e3', '5': '#00b894' }, labels: ['Procrastinated', 'Low Focus', 'Normal', 'Deep Work', 'Flow State'] },
+  sleep: { name: "Sleep & Rest", colors: { '1': '#2d3436', '2': '#636e72', '3': '#b2bec3', '4': '#0984e3', '5': '#6c5ce7' }, labels: ['< 5h', '5-6h', '6-7h', '7-8h', '8h+ / Rested'] },
+  movement: { name: "Movement & Fitness", colors: { '1': '#b2bec3', '2': '#74b9ff', '3': '#55efc4', '4': '#ffeaa7', '5': '#ff7675' }, labels: ['Rest Day', 'Walk', 'Yoga/Stretch', 'Run', 'Gym Session'] },
+  connection: { name: "Social & Connection", colors: { '1': '#fd79a8', '2': '#e84393', '3': '#6c5ce7', '4': '#00cec9', '5': '#fdcb6e' }, labels: ['Solo Time', 'Partner', 'Friends', 'Family', 'Community'] },
+  nourishment: { name: "Nourishment & Water", colors: { '1': '#ff7675', '2': '#ffeaa7', '3': '#74b9ff', '4': '#55efc4', '5': '#00b894' }, labels: ['Low Water', 'Balanced', 'Hydrated', 'No-Sugar', 'Clean Eating'] }
 };
 
 function initTrackers() {
@@ -159,7 +167,6 @@ function renderTracker(type) {
   const legendDisplay = document.getElementById('tracker-legend-display');
   if (!container || !config) return;
 
-  // Legende rendern
   legendDisplay.innerHTML = config.labels.map((lbl, idx) => `
     <span class="legend-item" style="--c: ${config.colors[idx + 1]}">${lbl}</span>
   `).join('');
@@ -206,7 +213,6 @@ function renderTracker(type) {
   });
 }
 
-/* --- SECTION 2: FINE-ART INTERACTIVE PAGES --- */
 function initBookshelf() {
   const container = document.getElementById('bookshelf-container');
   if (!container) return;
@@ -312,7 +318,6 @@ function initProjectProgress() {
   });
 }
 
-/* --- SECTION 3: SEASONAL DIVIDERS & REFLECTION --- */
 const monthData = [
   { name: 'JANUAR // WINTER SOLSTICE', art: '❄️ 🌙 🌿' },
   { name: 'FEBRUAR // DEEP FROST', art: '🕯️ ✨ 🪴' },
