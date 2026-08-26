@@ -1,0 +1,12 @@
+{
+  "name": "studium-dashboard",
+  "version": "1.0.0",
+  "description": "Persönliches Studium Dashboard mit Kalender, Pastell-Farben und Habit-Tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

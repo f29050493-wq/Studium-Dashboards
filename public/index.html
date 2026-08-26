@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mein Studium Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- FullCalendar CSS & JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">🎓 Uni Dashboard</div>
+    <nav class="menu">
+      <button class="nav-btn active" onclick="showTab('courses-tab', this)">📚 Meine Fächer</button>
+      <button class="nav-btn" onclick="showTab('calendar-tab', this)">📅 Kalender</button>
+      <button class="nav-btn" onclick="showTab('habits-tab', this)">🔥 Habit Tracker</button>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    
+    <!-- Tab 1: Fächer -->
+    <section id="courses-tab" class="tab-page active">
+      <header class="page-header">
+        <h1>Meine Kurse dieses Semester</h1>
+        <p>Hauptfarben für Vorlesungen – automatische Pastell-Farben für Labore & Tutorien</p>
+      </header>
+      <div id="course-list" class="course-grid"></div>
+    </section>
+
+    <!-- Tab 2: Kalender -->
+    <section id="calendar-tab" class="tab-page">
+      <header class="page-header">
+        <h1>Termine & Kalender</h1>
+      </header>
+      <div id="calendar-container">
+        <div id="calendar"></div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Habits -->
+    <section id="habits-tab" class="tab-page">
+      <header class="page-header">
+        <h1>Habit Tracker</h1>
+        <p>Tägliche Routinen für dein Studium</p>
+      </header>
+      <div id="habit-list" class="habit-container"></div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
