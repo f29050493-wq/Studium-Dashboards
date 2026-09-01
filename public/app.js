@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAppointments();
   loadHabits();
   
-  // Self-Care Module
+  // Self-Care & Projekte
   initTrackers();
   initBookshelf();
   initBingo();
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: 'c_' + Date.now(),
         title: document.getElementById('course-title').value,
         type: document.getElementById('course-type')?.value || '',
-        daysOfWeek: [selectedDay], // Wichtig für FullCalendar: Array der Wochentage (1 = Mo, ..., 5 = Fr)
+        daysOfWeek: [selectedDay],
         startTime: document.getElementById('course-start')?.value || '08:00',
         endTime: document.getElementById('course-end')?.value || '09:30',
         color: document.getElementById('course-color')?.value || '#00897b'
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: 'app_' + Date.now(),
         title: document.getElementById('app-title').value,
         date: document.getElementById('app-date').value,
-        color: document.getElementById('app-color')?.value || '#80cbd3'
+        color: '#80cbd3'
       };
 
       const localApps = JSON.parse(localStorage.getItem('userAppointments') || '[]');
@@ -114,7 +114,7 @@ function initNav() {
       const targetView = document.getElementById(targetId);
       if (targetView) targetView.classList.add('active');
 
-      if (targetId === 'view-studium' && window.calendarObj) {
+      if (targetId === 'view-dashboard-studium' && window.calendarObj) {
         setTimeout(() => window.calendarObj.updateSize(), 100);
       }
     });
@@ -170,7 +170,7 @@ function initCalendar() {
   window.calendarObj = calendar;
 }
 
-/* MEINE KURSE RENDERN & LÖSCHEN */
+/* KURSE LOAD & DELETE */
 async function loadCourses() {
   const container = document.getElementById('courses-list');
   if (!container) return;
@@ -200,9 +200,9 @@ async function loadCourses() {
     card.innerHTML = `
       <div>
         <strong>${c.title}</strong>
-        <span class="subinfo" style="display:block; font-size: 0.75rem; color: #607d8b;">${c.startTime || ''} - ${c.endTime || ''}</span>
+        <span style="display:block; font-size: 0.75rem; color: #607d8b;">${c.startTime || ''} - ${c.endTime || ''}</span>
       </div>
-      <button class="btn-delete" title="Kurs löschen">🗑️</button>
+      <button class="btn-delete" title="Löschen">🗑️</button>
     `;
 
     card.querySelector('.btn-delete').addEventListener('click', async () => {
@@ -220,7 +220,7 @@ async function loadCourses() {
   });
 }
 
-/* HABITS RENDERN & LÖSCHEN */
+/* HABITS LOAD & DELETE */
 async function loadHabits() {
   const container = document.getElementById('habits-container');
   if (!container) return;
@@ -237,7 +237,7 @@ async function loadHabits() {
   container.innerHTML = '';
 
   if (habits.length === 0) {
-    container.innerHTML = '<p class="subtext">Keine Habits eingetragen.</p>';
+    container.innerHTML = '<p class="subtext">Keine Habits.</p>';
     return;
   }
 
@@ -252,7 +252,7 @@ async function loadHabits() {
         <input type="checkbox">
         <span>${h.name}</span>
       </div>
-      <button class="btn-delete" title="Habit löschen">🗑️</button>
+      <button class="btn-delete" title="Löschen">🗑️</button>
     `;
 
     card.querySelector('.btn-delete').addEventListener('click', async () => {
@@ -269,7 +269,7 @@ async function loadHabits() {
   });
 }
 
-/* TERMINE RENDERN & LÖSCHEN */
+/* TERMINE LOAD & DELETE */
 function loadAppointments() {
   const container = document.getElementById('appointments-list');
   if (!container) return;
@@ -278,7 +278,7 @@ function loadAppointments() {
   container.innerHTML = '';
 
   if (appointments.length === 0) {
-    container.innerHTML = '<p class="subtext">Keine kommenden Termine.</p>';
+    container.innerHTML = '<p class="subtext">Keine Termine.</p>';
     return;
   }
 
@@ -292,9 +292,9 @@ function loadAppointments() {
     card.innerHTML = `
       <div>
         <strong>${app.title}</strong>
-        <span class="subinfo" style="display:block; font-size: 0.75rem; color: #607d8b;">${app.date ? new Date(app.date).toLocaleDateString('de-DE') : ''}</span>
+        <span style="display:block; font-size: 0.75rem; color: #607d8b;">${app.date ? new Date(app.date).toLocaleDateString('de-DE') : ''}</span>
       </div>
-      <button class="btn-delete" title="Termin löschen">🗑️</button>
+      <button class="btn-delete" title="Löschen">🗑️</button>
     `;
 
     card.querySelector('.btn-delete').addEventListener('click', () => {
@@ -350,7 +350,7 @@ function renderTracker(type) {
   let svgHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 820" width="100%">`;
 
   months.forEach((m, idx) => {
-    svgHtml += `<text x="${112 + idx * 52}" y="20" font-size="10" fill="#607d8b" font-weight="bold" text-anchor="middle">${m}</text>`;
+    svgHtml += `<text x="${112 + idx * 52}" y="20" font-size="10" fill="#78909c" font-weight="600" text-anchor="middle">${m}</text>`;
   });
 
   for (let day = 1; day <= 31; day++) {
@@ -366,7 +366,7 @@ function renderTracker(type) {
       svgHtml += `
         <rect class="interactive-cell" data-key="${key}" data-level="${lvl}"
               x="${x}" y="${y}" width="44" height="20" rx="4"
-              fill="${fill}" stroke="#b2dfdb" stroke-width="0.8" />
+              fill="${fill}" stroke="#e0f2f1" stroke-width="0.8" />
       `;
     }
   }
@@ -389,7 +389,7 @@ function renderTracker(type) {
         `;
       }).join('');
 
-      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #b0bec5" data-level="0">🗑️ Feld zurücksetzen</button>`;
+      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #b0bec5" data-level="0">🗑️ Zurücksetzen</button>`;
 
       popup.innerHTML = menuHtml;
 
@@ -430,7 +430,7 @@ function initBookshelf() {
       bookEl.style.color = book.read ? '#ffffff' : '#2c3e50';
       bookEl.textContent = book.title;
       bookEl.addEventListener('click', () => {
-        const newTitle = prompt('Buchtitel eingeben (leer lassen zum Zurücksetzen):', book.title);
+        const newTitle = prompt('Buchtitel eingeben:', book.title);
         if (newTitle !== null) {
           book.title = newTitle.trim() === '' ? 'Buch ' + (i + 1) : newTitle;
           book.read = newTitle.trim() !== '';
@@ -449,11 +449,11 @@ function initBingo() {
   const container = document.getElementById('bingo-grid');
   if (!container) return;
   const bingoItems = [
-    'Spaziergang', 'Digital Detoxing', '8h Schlaf', 'Meditation', 'Lieblingsessen',
-    'Buch lesen', 'Pflanzen gießen', 'Dehnen', 'Wasser trinken', '10k Schritte',
-    'Kein Zucker', 'Frische Luft', 'FREE SPACE', 'Musik hören', 'Sonne tanken',
-    'Tee trinken', 'Journaling', 'Freunde anrufen', 'Früh schlafen', 'Ordnung machen',
-    'Dankbarkeit', 'Podcast hören', 'Skincare', 'Me-Time', 'Lächeln'
+    'Spaziergang', 'Digital Detox', '8h Schlaf', 'Meditation', 'Lieblingsessen',
+    'Buch lesen', 'Pflanzen', 'Dehnen', 'Wasser', '10k Schritte',
+    'Kein Zucker', 'Frische Luft', 'FREE SPACE', 'Musik', 'Sonne',
+    'Tee trinken', 'Journaling', 'Freunde', 'Früh Schlaf', 'Ordnung',
+    'Dankbar', 'Podcast', 'Skincare', 'Me-Time', 'Lächeln'
   ];
   const savedBingo = JSON.parse(localStorage.getItem('bingoData') || '{}');
 
@@ -497,9 +497,9 @@ function initProjectProgress() {
       item.innerHTML = `
         <div class="project-header">
           <span>${proj.name}</span>
-          <div class="project-meta">
-            <span id="val-${idx}">${proj.val}%</span>
-            <button class="btn-delete" data-idx="${idx}" title="Projekt löschen">🗑️</button>
+          <div>
+            <span id="val-${idx}" style="color: var(--accent-teal); font-weight: 700;">${proj.val}%</span>
+            <button class="btn-delete" data-idx="${idx}" title="Löschen" style="margin-left: 8px;">🗑️</button>
           </div>
         </div>
         <input type="range" min="0" max="100" value="${proj.val}" data-idx="${idx}">
