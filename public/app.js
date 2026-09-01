@@ -126,7 +126,6 @@ function initClock() {
   }, 1000);
 }
 
-/* Wochenstundenplan im Zentrum */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
@@ -166,7 +165,7 @@ function initCalendar() {
   window.calendarObj = calendar;
 }
 
-/* KURSE RENDERN UND LÖSCHEN (wie bei den Projekten) */
+/* KURSE RENDERN UND LÖSCHEN */
 async function loadCourses() {
   const container = document.getElementById('courses-list');
   if (!container) return;
@@ -187,23 +186,25 @@ async function loadCourses() {
     return;
   }
 
-  courses.forEach((c, idx) => {
+  courses.forEach((c) => {
     const id = c._id || c.id;
     const card = document.createElement('div');
     card.className = 'item-card';
     card.style.setProperty('--card-c', c.color || '#00897b');
     
     card.innerHTML = `
-      <div>
+      <div style="flex: 1;">
         <strong>${c.title}</strong>
         <span class="subinfo" style="display:block; font-size: 0.75rem; color: #607d8b;">${c.startTime || ''} - ${c.endTime || ''}</span>
       </div>
       <button class="btn-delete" title="Kurs löschen">🗑️</button>
     `;
 
-    // Event-Listener direkt an den Button hängen
     card.querySelector('.btn-delete').addEventListener('click', async () => {
-      try { await fetch(`/api/events/${id}`, { method: 'DELETE' }); } catch (err) {}
+      try {
+        await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      } catch (err) {}
+
       let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
       local = local.filter(course => (course._id || course.id) !== id);
       localStorage.setItem('userCourses', JSON.stringify(local));
@@ -237,7 +238,7 @@ function loadAppointments() {
     card.style.setProperty('--card-c', app.color || '#80cbd3');
 
     card.innerHTML = `
-      <div>
+      <div style="flex: 1;">
         <strong>${app.title}</strong>
         <span class="subinfo" style="display:block; font-size: 0.75rem; color: #607d8b;">${app.date ? new Date(app.date).toLocaleDateString('de-DE') : ''}</span>
       </div>
@@ -282,7 +283,7 @@ async function loadHabits() {
     card.style.setProperty('--card-c', '#80cbd3');
 
     card.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
         <input type="checkbox">
         <span>${h.name}</span>
       </div>
@@ -290,7 +291,10 @@ async function loadHabits() {
     `;
 
     card.querySelector('.btn-delete').addEventListener('click', async () => {
-      try { await fetch(`/api/habits/${id}`, { method: 'DELETE' }); } catch (err) {}
+      try {
+        await fetch(`/api/habits/${id}`, { method: 'DELETE' });
+      } catch (err) {}
+
       let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
       local = local.filter(habit => (habit._id || habit.id) !== id);
       localStorage.setItem('userHabits', JSON.stringify(local));

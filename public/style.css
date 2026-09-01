@@ -192,36 +192,44 @@ input[type="color"] {
 }
 
 /* LÖSCHEN BUTTON & LISTEN */
-.btn-delete {
-  background: transparent;
-  color: var(--text-muted);
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 0 4px;
-  transition: color 0.2s;
-}
-
-.btn-delete:hover { color: var(--accent-coral); }
-
 .item-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .item-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--primary-light);
-  padding: 0.6rem 0.8rem;
-  border-radius: 6px;
-  border-left: 4px solid var(--card-c, var(--primary-turquoise));
-  font-size: 0.85rem;
-  font-weight: 500;
+  position: relative;
+  background-color: #ffffff;
+  border-left: 4px solid var(--card-c, #00897b);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .item-card .sub-info {
   font-size: 0.75rem;
   color: var(--text-muted);
   display: block;
+}
+
+.btn-delete {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s, transform 0.1s, color 0.2s;
+  z-index: 2;
+  line-height: 1;
+}
+
+.btn-delete:hover {
+  color: var(--accent-coral);
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(1.1);
 }
 
 /* SELF-CARE TRACKERS */
