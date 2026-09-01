@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Race Control &amp; Self-Care Studio</title>
+  <title>Study &amp; Self-Care Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -82,7 +82,7 @@
           <!-- HABIT HINZUFÜGEN & LISTE -->
           <h2 style="margin-top: 1.5rem;"><span class="icon">🌱</span> Habits / Tägliche Aufgaben</h2>
           <form id="add-habit-form" class="quick-add-form">
-            <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen, Wasser)..." required>
+            <input type="text" id="habit-name" placeholder="Neues Habit..." required>
             <button type="submit" class="btn-accent">+</button>
           </form>
           <div id="habits-container" class="item-list"></div>
@@ -109,20 +109,23 @@
             <input type="date" id="app-date" required>
           </div>
           <div class="form-group">
+            <label for="app-time">Uhrzeit (Optional)</label>
+            <input type="time" id="app-time">
+          </div>
+          <div class="form-group">
             <label for="app-color">Farbe</label>
             <input type="color" id="app-color" value="#80cbd3">
           </div>
-          <button type="submit" class="btn-accent">+ TERMIN HINZUFÜGEN</button>
+          <button type="submit" class="btn-accent">+ HINZUFÜGEN</button>
         </form>
 
-        <p class="subtext" style="margin-top: 0.6rem; margin-bottom: 0;">💡 Klicke auf einen Termin im Kalender, um ihn direkt zu löschen.</p>
+        <p class="subtext" style="margin-top: 0.6rem; margin-bottom: 0;">💡 Klicke direkt auf einen Tag im Kalender, um einen Termin hinzuzufügen. Klicke auf einen Eintrag, um ihn zu löschen.</p>
         <div id="month-calendar" style="margin-top: 1rem;"></div>
       </section>
     </div>
 
     <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
     <div id="view-selfcare" class="dashboard-view">
-      <!-- 12x31 TRACKERS -->
       <section class="panel full-width-panel" style="margin-bottom: 1.5rem; position: relative;">
         <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
         
@@ -142,30 +145,25 @@
 
         <div class="tracker-legend" id="tracker-legend-display"></div>
         <div id="interactive-tracker-container"></div>
-
         <div id="tracker-popup-menu" class="tracker-menu hidden"></div>
       </section>
 
-      <!-- FINE-ART INTERACTIVE PAGES -->
       <section class="panel full-width-panel">
         <h2><span class="icon">🎨</span> 2. Fine-Art Interactive Pages</h2>
         
         <div class="interactive-subgrid">
-          <!-- Bookshelf -->
           <div class="subcard">
             <h3>📚 Bookshelf / Reading Tracker</h3>
-            <p class="subtext">Klicke ein Buch an, um Titel/Status zu ändern (Leeren löscht den Titel).</p>
+            <p class="subtext">Klicke ein Buch an, um Titel/Status zu ändern.</p>
             <div id="bookshelf-container" class="bookshelf"></div>
           </div>
 
-          <!-- Self-Care Bingo -->
           <div class="subcard">
             <h3>🧘 Self-Care Bingo</h3>
             <p class="subtext">Achtsame Alltagsimpulse abhaken</p>
             <div id="bingo-grid" class="bingo-container"></div>
           </div>
 
-          <!-- Project Progress -->
           <div class="subcard full-subcard">
             <div class="subcard-header">
               <h3>🎨 Project &amp; Habit Progress</h3>
