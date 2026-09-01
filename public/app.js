@@ -1,5 +1,5 @@
 /* ==========================================================================
-   HAUPT-SKRIPT (public/app.js)
+   HAUPT-SKRIPT (public/app.js) - VOLLSTÄNDIGE VERSION
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initCourseForm();
   initHabitForm();
   initInteractiveTracker();
+  initBookshelf();
+  initBingo();
+  initProjects();
 });
 
 /* ==========================================================================
@@ -47,7 +50,7 @@ function initNavigation() {
    ========================================================================== */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
-  if (!calendarEl) return;
+  if (!calendarEl || typeof FullCalendar === 'undefined') return;
 
   window.calendarObj = new FullCalendar.Calendar(calendarEl, {
     initialView: 'timeGridWeek',
@@ -91,7 +94,7 @@ function initCalendar() {
 }
 
 /* ==========================================================================
-   3. KURSE VERWALTEN (LADEN, ERSTELLEN, LÖSCHEN)
+   3. KURSE VERWALTEN (LADEN, ERSTELLEN, ROBUSTES LÖSCHEN)
    ========================================================================== */
 async function loadCourses() {
   const container = document.getElementById('courses-list');
@@ -127,31 +130,34 @@ async function loadCourses() {
     `;
 
     // Lösch-Funktionalität
-    card.querySelector('.btn-delete').addEventListener('click', async (e) => {
-      e.stopPropagation();
+    const deleteBtn = card.querySelector('.btn-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
 
-      const itemId = c._id || c.id;
-      if (itemId) {
-        try {
-          await fetch(`/api/events/${itemId}`, { method: 'DELETE' });
-        } catch (err) {
-          console.warn('Backend DELETE nicht erreichbar, lösche lokal:', err);
+        const itemId = c._id || c.id;
+        if (itemId) {
+          try {
+            await fetch(`/api/events/${itemId}`, { method: 'DELETE' });
+          } catch (err) {
+            console.warn('Backend DELETE nicht erreichbar:', err);
+          }
         }
-      }
 
-      // Lokal bereinigen
-      let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
-      local = local.filter((course) => {
-        const matchesId = (course._id && course._id === c._id) || (course.id && course.id === c.id);
-        const matchesContent = course.title === c.title && course.startTime === c.startTime;
-        return !matchesId && !matchesContent;
+        // Lokal bereinigen
+        let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
+        local = local.filter((course) => {
+          const matchesId = (course._id && course._id === c._id) || (course.id && course.id === c.id);
+          const matchesContent = course.title === c.title && course.startTime === c.startTime;
+          return !matchesId && !matchesContent;
+        });
+        localStorage.setItem('userCourses', JSON.stringify(local));
+
+        // UI & Kalender aktualisieren
+        if (window.calendarObj) window.calendarObj.refetchEvents();
+        loadCourses();
       });
-      localStorage.setItem('userCourses', JSON.stringify(local));
-
-      // UI & Kalender aktualisieren
-      if (window.calendarObj) window.calendarObj.refetchEvents();
-      loadCourses();
-    });
+    }
 
     container.appendChild(card);
   });
@@ -164,20 +170,22 @@ function initCourseForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const title = document.getElementById('course-title').value;
-    const day = document.getElementById('course-day').value;
-    const startTime = document.getElementById('course-start').value;
-    const endTime = document.getElementById('course-end').value;
-    const color = document.getElementById('course-color').value;
+    const titleEl = document.getElementById('course-title');
+    const dayEl = document.getElementById('course-day');
+    const startEl = document.getElementById('course-start');
+    const endEl = document.getElementById('course-end');
+    const colorEl = document.getElementById('course-color');
+
+    if (!titleEl || !startEl || !endEl) return;
 
     const newCourse = {
       id: Date.now().toString(),
-      title,
-      day,
-      startTime,
-      endTime,
-      color,
-      daysOfWeek: [parseInt(day)]
+      title: titleEl.value,
+      day: dayEl ? dayEl.value : "1",
+      startTime: startEl.value,
+      endTime: endEl.value,
+      color: colorEl ? colorEl.value : '#00897b',
+      daysOfWeek: [parseInt(dayEl ? dayEl.value : "1")]
     };
 
     try {
@@ -188,7 +196,6 @@ function initCourseForm() {
       });
       if (!res.ok) throw new Error();
     } catch (err) {
-      // Speichern im LocalStorage Fallback
       const local = JSON.parse(localStorage.getItem('userCourses') || '[]');
       local.push(newCourse);
       localStorage.setItem('userCourses', JSON.stringify(local));
@@ -201,7 +208,7 @@ function initCourseForm() {
 }
 
 /* ==========================================================================
-   4. HABITS VERWALTEN (LADEN, ERSTELLEN, LÖSCHEN)
+   4. HABITS VERWALTEN (LADEN, ERSTELLEN, ROBUSTES LÖSCHEN)
    ========================================================================== */
 async function loadHabits() {
   const container = document.getElementById('habits-container');
@@ -236,30 +243,32 @@ async function loadHabits() {
       <button class="btn-delete" title="Habit löschen">🗑️</button>
     `;
 
-    // Lösch-Funktionalität
-    card.querySelector('.btn-delete').addEventListener('click', async (e) => {
-      e.stopPropagation();
+    const deleteBtn = card.querySelector('.btn-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
 
-      const itemId = h._id || h.id;
-      if (itemId) {
-        try {
-          await fetch(`/api/habits/${itemId}`, { method: 'DELETE' });
-        } catch (err) {
-          console.warn('Backend DELETE nicht erreichbar, lösche lokal:', err);
+        const itemId = h._id || h.id;
+        if (itemId) {
+          try {
+            await fetch(`/api/habits/${itemId}`, { method: 'DELETE' });
+          } catch (err) {
+            console.warn('Backend DELETE nicht erreichbar:', err);
+          }
         }
-      }
 
-      // Lokal bereinigen
-      let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
-      local = local.filter((habit) => {
-        const matchesId = (habit._id && habit._id === h._id) || (habit.id && habit.id === h.id);
-        const matchesName = habit.name === h.name;
-        return !matchesId && !matchesName;
+        // Lokal bereinigen
+        let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
+        local = local.filter((habit) => {
+          const matchesId = (habit._id && habit._id === h._id) || (habit.id && habit.id === h.id);
+          const matchesName = habit.name === h.name;
+          return !matchesId && !matchesName;
+        });
+        localStorage.setItem('userHabits', JSON.stringify(local));
+
+        loadHabits();
       });
-      localStorage.setItem('userHabits', JSON.stringify(local));
-
-      loadHabits();
-    });
+    }
 
     container.appendChild(card);
   });
@@ -299,27 +308,26 @@ function initHabitForm() {
 }
 
 /* ==========================================================================
-   5. SELF-CARE & PIXEL-GRID TRACKER INTEGRATION
+   5. SELF-CARE / PIXEL-GRID TRACKER
    ========================================================================== */
 function initInteractiveTracker() {
   const container = document.getElementById('interactive-tracker-container');
   if (!container) return;
 
-  // Erstelle Beispiel-Pixel-Grid (30 Tage x Pixel-Zellen)
-  let svgHTML = `<svg width="100%" height="60" viewBox="0 0 600 50">`;
-  for (let i = 0; i < 30; i++) {
-    const x = i * 19 + 5;
-    svgHTML += `<rect x="${x}" y="10" width="15" height="30" rx="3" fill="#e0f2f1" stroke="#b2dfdb" class="interactive-cell" data-day="${i+1}"></rect>`;
+  if (container.children.length === 0) {
+    let svgHTML = `<svg width="100%" height="60" viewBox="0 0 600 50">`;
+    for (let i = 0; i < 30; i++) {
+      const x = i * 19 + 5;
+      svgHTML += `<rect x="${x}" y="10" width="15" height="30" rx="3" fill="#e0f2f1" stroke="#b2dfdb" class="interactive-cell" data-day="${i+1}"></rect>`;
+    }
+    svgHTML += `</svg>`;
+    container.innerHTML = svgHTML;
   }
-  svgHTML += `</svg>`;
-  container.innerHTML = svgHTML;
 
-  // Klick-Event auf Zellen
   const cells = container.querySelectorAll('.interactive-cell');
   cells.forEach(cell => {
     cell.addEventListener('click', () => {
       const currentColor = cell.getAttribute('fill');
-      // Farbwechsel-Logik (Beispiel: Hellgrün -> Türkis -> Coral -> Hellgrün)
       if (currentColor === '#e0f2f1') {
         cell.setAttribute('fill', '#00897b');
       } else if (currentColor === '#00897b') {
@@ -328,5 +336,58 @@ function initInteractiveTracker() {
         cell.setAttribute('fill', '#e0f2f1');
       }
     });
+  });
+}
+
+/* ==========================================================================
+   6. BÜCHERREGAL (BOOKSHELF)
+   ========================================================================== */
+function initBookshelf() {
+  const bookshelf = document.querySelector('.bookshelf');
+  if (!bookshelf) return;
+
+  const spines = bookshelf.querySelectorAll('.book-spine');
+  spines.forEach((spine) => {
+    spine.addEventListener('click', () => {
+      const currentBg = spine.style.backgroundColor;
+      if (!currentBg || currentBg === 'rgb(255, 255, 255)' || currentBg === 'ffffff') {
+        spine.style.backgroundColor = '#80cbd3';
+        spine.style.color = '#004d40';
+      } else {
+        spine.style.backgroundColor = '#ffffff';
+        spine.style.color = 'var(--text-main)';
+      }
+    });
+  });
+}
+
+/* ==========================================================================
+   7. BINGO
+   ========================================================================== */
+function initBingo() {
+  const bingoCells = document.querySelectorAll('.bingo-cell');
+  bingoCells.forEach((cell) => {
+    cell.addEventListener('click', () => {
+      cell.classList.toggle('active');
+      if (cell.classList.contains('active')) {
+        cell.style.backgroundColor = '#e0f2f1';
+        cell.style.borderColor = '#00897b';
+        cell.style.color = '#00897b';
+      } else {
+        cell.style.backgroundColor = '#ffffff';
+        cell.style.borderColor = 'var(--border-color)';
+        cell.style.color = 'var(--text-main)';
+      }
+    });
+  });
+}
+
+/* ==========================================================================
+   8. PROJEKTE
+   ========================================================================== */
+function initProjects() {
+  const projectItems = document.querySelectorAll('.project-item');
+  projectItems.forEach((item) => {
+    // Zusätzliche Interaktivität falls erforderlich
   });
 }
