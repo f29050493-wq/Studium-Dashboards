@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study &amp; Self-Care Dashboard</title>
+  <title>Race Control &amp; Self-Care Studio</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -82,7 +82,7 @@
           <!-- HABIT HINZUFÜGEN & LISTE -->
           <h2 style="margin-top: 1.5rem;"><span class="icon">🌱</span> Habits / Tägliche Aufgaben</h2>
           <form id="add-habit-form" class="quick-add-form">
-            <input type="text" id="habit-name" placeholder="Neues Habit..." required>
+            <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen)..." required>
             <button type="submit" class="btn-accent">+</button>
           </form>
           <div id="habits-container" class="item-list"></div>
@@ -98,28 +98,7 @@
       <!-- UNTEN: Monats-Kalender für Termine & Aktivitäten -->
       <section class="panel full-width-panel" style="margin-top: 1.5rem;">
         <h2><span class="icon">🗓️</span> Termine &amp; Aktivitäten</h2>
-        
-        <form id="add-appointment-form" class="appointment-form">
-          <div class="form-group">
-            <label for="app-title">Termin / Aktivität</label>
-            <input type="text" id="app-title" placeholder="z.B. Arzttermin, Ausflug, Prüfung..." required>
-          </div>
-          <div class="form-group">
-            <label for="app-date">Datum</label>
-            <input type="date" id="app-date" required>
-          </div>
-          <div class="form-group">
-            <label for="app-time">Uhrzeit (Optional)</label>
-            <input type="time" id="app-time">
-          </div>
-          <div class="form-group">
-            <label for="app-color">Farbe</label>
-            <input type="color" id="app-color" value="#80cbd3">
-          </div>
-          <button type="submit" class="btn-accent">+ HINZUFÜGEN</button>
-        </form>
-
-        <p class="subtext" style="margin-top: 0.6rem; margin-bottom: 0;">💡 Klicke direkt auf einen Tag im Kalender, um einen Termin hinzuzufügen. Klicke auf einen Eintrag, um ihn zu löschen.</p>
+        <p class="subtext">💡 <strong>Klicke einfach auf einen Tag im Kalender</strong>, um einen Termin mit Uhrzeit einzutragen. Klicke auf einen bestehenden Termin, um ihn zu löschen.</p>
         <div id="month-calendar" style="margin-top: 1rem;"></div>
       </section>
     </div>
@@ -169,7 +148,7 @@
               <h3>🎨 Project &amp; Habit Progress</h3>
               <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
             </div>
-            <p class="subtext">Fortschritt deiner aktuellen Projekte in Prozent (%) verwalten</p>
+            <p class="subtext">Fortschritt deiner aktuellen Projekte verwalten</p>
             <div id="project-list" class="project-progress-list"></div>
           </div>
         </div>

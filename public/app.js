@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  window.deleteCourse = deleteCourse;
+  window.deleteHabit = deleteHabit;
+
   initNav();
   initClock();
   initCalendar();
@@ -12,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBingo();
   initProjectProgress();
 
-  // Event-Listener für Kurs-Formular
+  // Kurs hinzufügen
   const addCourseForm = document.getElementById('add-course-form');
   if (addCourseForm) {
     addCourseForm.addEventListener('submit', async (e) => {
@@ -45,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Event-Listener für Habit-Formular
+  // Habit hinzufügen
   const addHabitForm = document.getElementById('add-habit-form');
   if (addHabitForm) {
     addHabitForm.addEventListener('submit', async (e) => {
@@ -70,37 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       input.value = '';
       loadHabits();
-    });
-  }
-
-  // Event-Listener für Termin-Formular
-  const addAppForm = document.getElementById('add-appointment-form');
-  if (addAppForm) {
-    addAppForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('app-title').value;
-      const date = document.getElementById('app-date').value;
-      const time = document.getElementById('app-time').value;
-      const color = document.getElementById('app-color').value;
-
-      let startVal = date;
-      let allDay = true;
-      if (time) {
-        startVal = `${date}T${time}:00`;
-        allDay = false;
-      }
-
-      if (window.monthCalendarObj) {
-        window.monthCalendarObj.addEvent({
-          id: 'app_' + Date.now(),
-          title: time ? `${time} ${title}` : title,
-          start: startVal,
-          allDay: allDay,
-          backgroundColor: color,
-          borderColor: color
-        });
-        addAppForm.reset();
-      }
     });
   }
 });
@@ -139,7 +111,7 @@ function initClock() {
   }, 1000);
 }
 
-/* Wochenstundenplan */
+/* Großer Wochenstundenplan */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
@@ -165,10 +137,19 @@ function initCalendar() {
         }
       } catch (err) {}
       const local = JSON.parse(localStorage.getItem('userCourses') || '[]');
-      successCallback(local);
+      const calendarEvents = local.map(c => ({
+        id: c.id || c._id,
+        title: c.title,
+        daysOfWeek: [c.dayOfWeek],
+        startTime: c.startTime,
+        endTime: c.endTime,
+        backgroundColor: c.color || '#00897b',
+        borderColor: c.color || '#00897b'
+      }));
+      successCallback(calendarEvents);
     },
     eventDidMount: function(info) {
-      const baseColor = info.event.extendedProps.color || '#00897b';
+      const baseColor = info.event.backgroundColor || '#00897b';
       info.el.style.backgroundColor = baseColor;
       info.el.style.borderColor = baseColor;
       info.el.style.color = '#ffffff';
@@ -179,7 +160,7 @@ function initCalendar() {
   window.calendarObj = calendar;
 }
 
-/* Monats-Kalender mit Direkt-Klick auf den Tag */
+/* Monats-Kalender mit Direkt-Klick-Eingabe */
 function initMonthCalendar() {
   const container = document.getElementById('month-calendar');
   if (!container) return;
@@ -194,38 +175,47 @@ function initMonthCalendar() {
       right: ''
     },
     editable: true,
+    selectable: true,
     events: JSON.parse(localStorage.getItem('userAppointments') || '[]'),
     
-    // Klick auf ein Datum im Kalender -> Prompt für Titel & Uhrzeit
+    // Klick auf ein Datum zum schnellen Eintragen
     dateClick: function(info) {
-      const title = prompt('Termin / Aktivität für den ' + info.dateStr + ' eingeben:');
+      const title = prompt(`Neuer Termin am ${info.dateStr}:`);
       if (!title) return;
 
-      const time = prompt('Uhrzeit eingeben (z.B. 14:30) oder leer lassen:');
-      let startVal = info.dateStr;
+      const timeInput = prompt('Uhrzeit eingeben (z.B. 14:30) oder leer lassen für ganztägig:');
+      let startString = info.dateStr;
       let allDay = true;
 
-      if (time && time.trim() !== '') {
-        startVal = `${info.dateStr}T${time.trim()}:00`;
+      if (timeInput && timeInput.trim() !== '') {
+        startString = `${info.dateStr}T${timeInput.trim()}:00`;
         allDay = false;
       }
 
       monthCalendar.addEvent({
         id: 'app_' + Date.now(),
-        title: time ? `${time.trim()} ${title}` : title,
-        start: startVal,
+        title: title,
+        start: startString,
         allDay: allDay,
-        backgroundColor: '#80cbd3',
-        borderColor: '#80cbd3'
+        backgroundColor: '#00897b',
+        borderColor: '#00897b',
+        textColor: '#ffffff'
       });
     },
 
-    // Klick auf ein bestehendes Event -> Löschen
+    // Klick auf bestehenden Termin zum Löschen
     eventClick: function(info) {
       if (confirm(`Termin "${info.event.title}" löschen?`)) {
         info.event.remove();
       }
     },
+
+    eventDidMount: function(info) {
+      info.el.style.backgroundColor = info.event.backgroundColor || '#00897b';
+      info.el.style.borderColor = info.event.borderColor || '#00897b';
+      info.el.style.color = '#ffffff';
+    },
+
     eventChange: saveAppointments,
     eventAdd: saveAppointments,
     eventRemove: saveAppointments
@@ -242,8 +232,9 @@ function saveAppointments() {
     title: e.title,
     start: e.startStr,
     allDay: e.allDay,
-    backgroundColor: e.backgroundColor,
-    borderColor: e.borderColor
+    backgroundColor: e.backgroundColor || '#00897b',
+    borderColor: e.borderColor || '#00897b',
+    textColor: '#ffffff'
   }));
   localStorage.setItem('userAppointments', JSON.stringify(events));
 }
@@ -253,45 +244,35 @@ async function loadCourses() {
   const container = document.getElementById('courses-list');
   if (!container) return;
 
-  let courses = JSON.parse(localStorage.getItem('userCourses') || '[]');
-
+  let courses = [];
   try {
     const res = await fetch('/api/events');
-    if (res.ok) {
-      const apiCourses = await res.json();
-      if (apiCourses.length > 0) courses = apiCourses;
-    }
-  } catch (err) {}
+    if (res.ok) courses = await res.json();
+    else throw new Error();
+  } catch (err) {
+    courses = JSON.parse(localStorage.getItem('userCourses') || '[]');
+  }
 
   if (courses.length === 0) {
     container.innerHTML = '<p class="subtext">Keine Kurse eingetragen.</p>';
     return;
   }
 
-  container.innerHTML = courses.map((c, index) => {
-    const id = c._id || c.id || index;
+  container.innerHTML = courses.map(c => {
+    const id = c.id || c._id;
     return `
       <div class="item-card" style="--card-c: ${c.color || '#00897b'}">
         <span>${c.title}</span>
-        <button class="btn-delete" data-id="${id}" data-index="${index}" title="Kurs löschen">🗑️</button>
+        <button class="btn-delete" onclick="deleteCourse('${id}')" title="Kurs löschen">🗑️</button>
       </div>
     `;
   }).join('');
-
-  container.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.getAttribute('data-id');
-      const idx = parseInt(e.target.getAttribute('data-index'));
-      deleteCourse(id, idx);
-    });
-  });
 }
 
-async function deleteCourse(id, idx) {
+async function deleteCourse(id) {
   try { await fetch(`/api/events/${id}`, { method: 'DELETE' }); } catch (err) {}
-
   let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
-  local = local.filter((c, i) => (c._id !== id && c.id !== id && i !== idx));
+  local = local.filter(c => (c.id !== id && c._id !== id));
   localStorage.setItem('userCourses', JSON.stringify(local));
 
   if (window.calendarObj) window.calendarObj.refetchEvents();
@@ -303,48 +284,38 @@ async function loadHabits() {
   const container = document.getElementById('habits-container');
   if (!container) return;
 
-  let habits = JSON.parse(localStorage.getItem('userHabits') || '[]');
-
+  let habits = [];
   try {
     const res = await fetch('/api/habits');
-    if (res.ok) {
-      const apiHabits = await res.json();
-      if (apiHabits.length > 0) habits = apiHabits;
-    }
-  } catch (err) {}
+    if (res.ok) habits = await res.json();
+    else throw new Error();
+  } catch (err) {
+    habits = JSON.parse(localStorage.getItem('userHabits') || '[]');
+  }
 
   if (habits.length === 0) {
     container.innerHTML = '<p class="subtext">Keine Habits eingetragen.</p>';
     return;
   }
 
-  container.innerHTML = habits.map((h, index) => {
-    const id = h._id || h.id || index;
+  container.innerHTML = habits.map(h => {
+    const id = h.id || h._id;
     return `
       <div class="item-card" style="--card-c: #80cbd3">
         <div style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox">
           <span>${h.name}</span>
         </div>
-        <button class="btn-delete" data-id="${id}" data-index="${index}" title="Habit löschen">🗑️</button>
+        <button class="btn-delete" onclick="deleteHabit('${id}')" title="Habit löschen">🗑️</button>
       </div>
     `;
   }).join('');
-
-  container.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.getAttribute('data-id');
-      const idx = parseInt(e.target.getAttribute('data-index'));
-      deleteHabit(id, idx);
-    });
-  });
 }
 
-async function deleteHabit(id, idx) {
+async function deleteHabit(id) {
   try { await fetch(`/api/habits/${id}`, { method: 'DELETE' }); } catch (err) {}
-
   let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
-  local = local.filter((h, i) => (h._id !== id && h.id !== id && i !== idx));
+  local = local.filter(h => (h.id !== id && h._id !== id));
   localStorage.setItem('userHabits', JSON.stringify(local));
 
   loadHabits();

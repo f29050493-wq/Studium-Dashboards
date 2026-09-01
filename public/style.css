@@ -5,7 +5,7 @@
   --primary-turquoise: #00897b;
   --primary-light: #e0f2f1;
   --accent-mint: #80cbd3;
-  --accent-coral: #ff8a80;
+  --accent-coral: #e57373;
   --text-main: #2c3e50;
   --text-muted: #607d8b;
   --shadow-soft: 0 4px 15px rgba(0, 137, 123, 0.08);
@@ -25,6 +25,7 @@ body {
   padding: 1.5rem;
 }
 
+/* TOP NAV MENU */
 .top-nav {
   display: flex;
   justify-content: space-between;
@@ -66,17 +67,36 @@ body {
   transition: all 0.2s ease;
 }
 
-.nav-btn:hover { background: var(--border-color); }
+.nav-btn:hover {
+  background: var(--border-color);
+}
+
 .nav-btn.active {
   background: var(--primary-turquoise);
   color: #ffffff;
   border-color: var(--primary-turquoise);
 }
 
-.telemetry-item { display: flex; flex-direction: column; align-items: flex-end; }
-.telemetry-item .label { font-size: 0.65rem; color: var(--text-muted); font-weight: bold; }
-.telemetry-item .value { font-family: monospace; font-weight: bold; font-size: 1rem; color: var(--primary-turquoise); }
+.telemetry-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
 
+.telemetry-item .label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.telemetry-item .value {
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--primary-turquoise);
+}
+
+/* DASHBOARD VIEWS */
 .dashboard-view { display: none; }
 .dashboard-view.active { display: block; }
 
@@ -105,26 +125,38 @@ body {
   color: var(--primary-turquoise);
 }
 
+/* KALENDER STYLING */
 .calendar-panel { min-height: 850px; }
 #calendar { background: #ffffff; color: var(--text-main); height: 800px; }
-#month-calendar { background: #ffffff; color: var(--text-main); min-height: 600px; }
+#month-calendar { background: #ffffff; color: var(--text-main); min-height: 650px; }
 
-.fc-theme-standard td, .fc-theme-standard th { border-color: #e0e0e0 !important; }
+.fc-theme-standard td, .fc-theme-standard th { border-color: #e0f2f1 !important; }
 .fc-col-header-cell { background: var(--primary-light); padding: 0.6rem 0; color: var(--primary-turquoise); }
-.fc-daygrid-day { cursor: pointer; }
-.fc-daygrid-day:hover { background-color: #f0faf9; }
+.fc-timegrid-slot { height: 3.5rem !important; }
+.fc-timegrid-slot-label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
 
-.appointment-form {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 80px auto;
-  gap: 1rem;
-  align-items: flex-end;
-  background: var(--primary-light);
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+/* Bessere Erkennbarkeit der Termine */
+.fc-event {
+  cursor: pointer;
+  border-radius: 6px !important;
+  padding: 3px 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  transition: transform 0.15s ease;
 }
 
+.fc-event:hover {
+  transform: scale(1.02);
+  filter: brightness(0.95);
+}
+
+.fc-daygrid-event-dot {
+  display: none !important;
+}
+
+/* Form Elements */
 .quick-add-form {
   display: flex;
   gap: 0.5rem;
@@ -157,7 +189,9 @@ input[type="text"], input[type="time"], input[type="date"], select {
   outline: none;
 }
 
-input[type="text"]:focus, select:focus { border-color: var(--primary-turquoise); }
+input[type="text"]:focus, select:focus {
+  border-color: var(--primary-turquoise);
+}
 
 input[type="color"] {
   width: 100%;
@@ -177,9 +211,12 @@ input[type="color"] {
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
+  width: 100%;
 }
 
-.btn-accent:hover { background: #00695c; }
+.btn-accent:hover {
+  background: #00695c;
+}
 
 .btn-small {
   background: var(--accent-mint);
@@ -204,20 +241,17 @@ input[type="color"] {
 
 .btn-delete:hover { color: var(--accent-coral); }
 
+/* Item Lists (Kurse & Habits) */
 .item-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .item-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--primary-light);
-  padding: 0.6rem 0.8rem;
-  border-radius: 6px;
-  border-left: 4px solid var(--card-c, var(--primary-turquoise));
-  font-size: 0.85rem;
-  font-weight: 500;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--primary-light); padding: 0.6rem 0.8rem; border-radius: 6px;
+  border-left: 5px solid var(--card-c, var(--primary-turquoise));
+  font-size: 0.85rem; font-weight: 500;
 }
 
+/* Self-Care Section */
 .tracker-selector { margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; }
 .tracker-selector select { width: auto; }
 .tracker-legend { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; justify-content: center; }
@@ -228,32 +262,15 @@ input[type="color"] {
 .interactive-cell:hover { stroke: var(--primary-turquoise) !important; stroke-width: 1.5px !important; }
 
 .tracker-menu {
-  position: absolute;
-  z-index: 1000;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  position: absolute; z-index: 1000; background: #ffffff; border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
-
 .tracker-menu.hidden { display: none; }
-
 .tracker-menu-btn {
-  background: var(--primary-light);
-  color: var(--text-main);
-  border: 1px solid var(--btn-color, #ccc);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  text-align: left;
-  cursor: pointer;
-  font-weight: 500;
+  background: var(--primary-light); color: var(--text-main); border: 1px solid var(--btn-color, #ccc);
+  padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; text-align: left; cursor: pointer; font-weight: 500;
 }
-
 .tracker-menu-btn:hover { background: var(--btn-color, var(--border-color)); color: #ffffff; }
 
 .interactive-subgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
