@@ -11,16 +11,16 @@
   <!-- NAVIGATION OBEN -->
   <header class="top-nav">
     <div class="brand">
-      <span class="flag-icon">🏁</span>
-      <h1>RACE CONTROL <span>// DASHBOARD</span></h1>
+      <span class="flag-icon">✨</span>
+      <h1>STUDY <span>&amp; SELF-CARE DASHBOARD</span></h1>
     </div>
     <nav class="nav-menu">
       <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Stundenplan</button>
-      <button class="nav-btn" data-target="view-selfcare">✨ Self-Care Studio</button>
+      <button class="nav-btn" data-target="view-selfcare">🌿 Self-Care Studio</button>
     </nav>
     <div class="telemetry-bar">
       <div class="telemetry-item">
-        <span class="label">UHRZEIT (DE)</span>
+        <span class="label">UHRZEIT</span>
         <span class="value" id="telemetry-time">00:00:00</span>
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div class="dashboard-grid">
         <!-- LINKS: Kurs hinzufügen, Kursliste, Habit hinzufügen & Habitliste -->
         <section class="panel left-panel">
-          <h2><span class="icon">🏎️</span> Kurs hinzufügen</h2>
+          <h2><span class="icon">📖</span> Kurs hinzufügen</h2>
           <form id="add-course-form">
             <div class="form-group">
               <label for="course-title">Kursname / Fach</label>
@@ -41,9 +41,9 @@
             <div class="form-group">
               <label for="course-type">Veranstaltungstyp</label>
               <select id="course-type">
-                <option value="vorlesung">Vorlesung (Hauptfarbe)</option>
-                <option value="labor">Labor / Übung (Pastell)</option>
-                <option value="tutorium">Tutorium (Pastell)</option>
+                <option value="vorlesung">Vorlesung</option>
+                <option value="labor">Labor / Übung</option>
+                <option value="tutorium">Tutorium</option>
               </select>
             </div>
             <div class="form-row">
@@ -58,8 +58,8 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="course-color">Team-Farbe</label>
-                <input type="color" id="course-color" value="#e10600">
+                <label for="course-color">Farbe</label>
+                <input type="color" id="course-color" value="#00897b">
               </div>
             </div>
             <div class="form-row">
@@ -72,22 +72,20 @@
                 <input type="time" id="course-end" value="09:30" required>
               </div>
             </div>
-            <button type="submit" class="btn-paddock">+ KURS EINTRAGEN</button>
+            <button type="submit" class="btn-accent">+ KURS HINZUFÜGEN</button>
           </form>
 
           <!-- LISTE ALLER KURSE -->
-          <h2 style="margin-top: 1.5rem;"><span class="icon">📚</span> Eingetragene Kurse</h2>
-          <div id="courses-list" class="habits-list"></div>
+          <h2 style="margin-top: 1.5rem;"><span class="icon">📚</span> Meine Kurse</h2>
+          <div id="courses-list" class="item-list"></div>
 
           <!-- HABIT HINZUFÜGEN & LISTE -->
-          <h2 style="margin-top: 1.5rem;"><span class="icon">📋</span> Habits / Pit Stop Checklist</h2>
-          <form id="add-habit-form" style="margin-bottom: 1rem;">
-            <div class="form-row" style="gap: 0.5rem;">
-              <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen)" required style="flex: 1;">
-              <button type="submit" class="btn-paddock" style="padding: 0.55rem 0.8rem;">+</button>
-            </div>
+          <h2 style="margin-top: 1.5rem;"><span class="icon">🌱</span> Habits / Tägliche Aufgaben</h2>
+          <form id="add-habit-form" class="quick-add-form">
+            <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen, Wasser)..." required>
+            <button type="submit" class="btn-accent">+</button>
           </form>
-          <div id="habits-container" class="habits-list"></div>
+          <div id="habits-container" class="item-list"></div>
         </section>
 
         <!-- RECHTS: Wochen-Stundenplan -->
@@ -99,12 +97,12 @@
 
       <!-- UNTEN: Monats-Kalender für Termine & Aktivitäten -->
       <section class="panel full-width-panel" style="margin-top: 1.5rem;">
-        <h2><span class="icon">🗓️</span> Termine &amp; Aktivitäts-Kalender</h2>
+        <h2><span class="icon">🗓️</span> Termine &amp; Aktivitäten</h2>
         
         <form id="add-appointment-form" class="appointment-form">
           <div class="form-group">
             <label for="app-title">Termin / Aktivität</label>
-            <input type="text" id="app-title" placeholder="z.B. Zahnarzt, Wismar Trip, Prüfung..." required>
+            <input type="text" id="app-title" placeholder="z.B. Arzttermin, Ausflug, Prüfung..." required>
           </div>
           <div class="form-group">
             <label for="app-date">Datum</label>
@@ -112,12 +110,12 @@
           </div>
           <div class="form-group">
             <label for="app-color">Farbe</label>
-            <input type="color" id="app-color" value="#ffb800">
+            <input type="color" id="app-color" value="#80cbd3">
           </div>
-          <button type="submit" class="btn-paddock" style="align-self: flex-end;">+ TERMIN EINTRAGEN</button>
+          <button type="submit" class="btn-accent">+ TERMIN HINZUFÜGEN</button>
         </form>
 
-        <p class="subtext" style="margin-top: 0.5rem; margin-bottom: 0;">💡 Tipp: Klicke auf einen Termin im Kalender, um ihn zu löschen.</p>
+        <p class="subtext" style="margin-top: 0.6rem; margin-bottom: 0;">💡 Klicke auf einen Termin im Kalender, um ihn direkt zu löschen.</p>
         <div id="month-calendar" style="margin-top: 1rem;"></div>
       </section>
     </div>
@@ -170,7 +168,7 @@
           <!-- Project Progress -->
           <div class="subcard full-subcard">
             <div class="subcard-header">
-              <h3>🏎️ Project &amp; Habit Progress</h3>
+              <h3>🎨 Project &amp; Habit Progress</h3>
               <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
             </div>
             <p class="subtext">Fortschritt deiner aktuellen Projekte in Prozent (%) verwalten</p>

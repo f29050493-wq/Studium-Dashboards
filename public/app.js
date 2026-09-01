@@ -12,40 +12,32 @@ document.addEventListener('DOMContentLoaded', () => {
   initBingo();
   initProjectProgress();
 
-  // Formular Handling: Kurs hinzufügen
+  // Kurs hinzufügen
   const addCourseForm = document.getElementById('add-course-form');
   if (addCourseForm) {
     addCourseForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const title = document.getElementById('course-title').value;
-      const type = document.getElementById('course-type').value;
-      const day = document.getElementById('course-day').value;
-      const color = document.getElementById('course-color').value;
-      const start = document.getElementById('course-start').value;
-      const end = document.getElementById('course-end').value;
-
       const courseObj = {
         id: 'c_' + Date.now(),
-        title,
-        type,
-        dayOfWeek: parseInt(day),
-        startTime: start,
-        endTime: end,
-        color
+        title: document.getElementById('course-title').value,
+        type: document.getElementById('course-type').value,
+        dayOfWeek: parseInt(document.getElementById('course-day').value),
+        startTime: document.getElementById('course-start').value,
+        endTime: document.getElementById('course-end').value,
+        color: document.getElementById('course-color').value
       };
 
       try {
-        const res = await fetch('/api/events', {
+        await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(courseObj)
         });
-        if (!res.ok) throw new Error();
-      } catch (err) {
-        const localCourses = JSON.parse(localStorage.getItem('userCourses') || '[]');
-        localCourses.push(courseObj);
-        localStorage.setItem('userCourses', JSON.stringify(localCourses));
-      }
+      } catch (err) {}
+
+      const localCourses = JSON.parse(localStorage.getItem('userCourses') || '[]');
+      localCourses.push(courseObj);
+      localStorage.setItem('userCourses', JSON.stringify(localCourses));
 
       addCourseForm.reset();
       if (window.calendarObj) window.calendarObj.refetchEvents();
@@ -53,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Formular Handling: Habit hinzufügen
+  // Habit hinzufügen
   const addHabitForm = document.getElementById('add-habit-form');
   if (addHabitForm) {
     addHabitForm.addEventListener('submit', async (e) => {
@@ -65,24 +57,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const habitObj = { id: 'h_' + Date.now(), name };
 
       try {
-        const res = await fetch('/api/habits', {
+        await fetch('/api/habits', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(habitObj)
         });
-        if (!res.ok) throw new Error();
-      } catch (err) {
-        const localHabits = JSON.parse(localStorage.getItem('userHabits') || '[]');
-        localHabits.push(habitObj);
-        localStorage.setItem('userHabits', JSON.stringify(localHabits));
-      }
+      } catch (err) {}
+
+      const localHabits = JSON.parse(localStorage.getItem('userHabits') || '[]');
+      localHabits.push(habitObj);
+      localStorage.setItem('userHabits', JSON.stringify(localHabits));
 
       input.value = '';
       loadHabits();
     });
   }
 
-  // Formular Handling: Termin hinzufügen
+  // Termin hinzufügen
   const addAppForm = document.getElementById('add-appointment-form');
   if (addAppForm) {
     addAppForm.addEventListener('submit', (e) => {
@@ -140,16 +131,7 @@ function initClock() {
   }, 1000);
 }
 
-function getPastelColor(hexColor) {
-  let hex = hexColor.replace('#', '');
-  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-  let r = parseInt(hex.substring(0, 2), 16);
-  let g = parseInt(hex.substring(2, 4), 16);
-  let b = parseInt(hex.substring(4, 6), 16);
-  return `rgb(${Math.round(r * 0.15 + 255 * 0.85)}, ${Math.round(g * 0.15 + 255 * 0.85)}, ${Math.round(b * 0.15 + 255 * 0.85)})`;
-}
-
-/* Großer Stundenplan (Wochenansicht) */
+/* Großer Wochenstundenplan */
 function initCalendar() {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
@@ -165,7 +147,7 @@ function initCalendar() {
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     headerToolbar: false,
     allDaySlot: false,
-    events: async function(fetchInfo, successCallback, failureCallback) {
+    events: async function(fetchInfo, successCallback) {
       try {
         const res = await fetch('/api/events');
         if (res.ok) {
@@ -178,24 +160,18 @@ function initCalendar() {
       successCallback(local);
     },
     eventDidMount: function(info) {
-      const type = info.event.extendedProps.type;
-      const baseColor = info.event.extendedProps.color || '#e10600';
-      if (type === 'labor' || type === 'tutorium') {
-        info.el.style.backgroundColor = getPastelColor(baseColor);
-        info.el.style.borderColor = baseColor;
-        info.el.style.color = '#121418';
-      } else {
-        info.el.style.backgroundColor = baseColor;
-        info.el.style.borderColor = baseColor;
-        info.el.style.color = '#ffffff';
-      }
+      const baseColor = info.event.extendedProps.color || '#00897b';
+      info.el.style.backgroundColor = baseColor;
+      info.el.style.borderColor = baseColor;
+      info.el.style.color = '#ffffff';
+      info.el.style.borderRadius = '6px';
     }
   });
   calendar.render();
   window.calendarObj = calendar;
 }
 
-/* Monats-Kalender mit Klick zum Löschen */
+/* Monats-Kalender */
 function initMonthCalendar() {
   const container = document.getElementById('month-calendar');
   if (!container) return;
@@ -212,9 +188,7 @@ function initMonthCalendar() {
     editable: true,
     events: JSON.parse(localStorage.getItem('userAppointments') || '[]'),
     eventClick: function(info) {
-      if (confirm(`Möchtest du den Termin "${info.event.title}" löschen?`)) {
-        info.event.remove();
-      }
+      info.event.remove();
     },
     eventChange: saveAppointments,
     eventAdd: saveAppointments,
@@ -237,7 +211,7 @@ function saveAppointments() {
   localStorage.setItem('userAppointments', JSON.stringify(events));
 }
 
-/* Kurse laden & löschen */
+/* Kurse laden & direkt löschen */
 async function loadCourses() {
   const container = document.getElementById('courses-list');
   if (!container) return;
@@ -259,7 +233,7 @@ async function loadCourses() {
   container.innerHTML = courses.map(c => {
     const id = c._id || c.id;
     return `
-      <div class="course-item" style="--course-c: ${c.color || '#e10600'}">
+      <div class="item-card" style="--card-c: ${c.color || '#00897b'}">
         <span>${c.title}</span>
         <button class="btn-delete" onclick="deleteCourse('${id}')" title="Kurs löschen">🗑️</button>
       </div>
@@ -268,10 +242,7 @@ async function loadCourses() {
 }
 
 async function deleteCourse(id) {
-  try {
-    await fetch(`/api/events/${id}`, { method: 'DELETE' });
-  } catch (err) {}
-  
+  try { await fetch(`/api/events/${id}`, { method: 'DELETE' }); } catch (err) {}
   let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
   local = local.filter(c => (c._id || c.id) !== id);
   localStorage.setItem('userCourses', JSON.stringify(local));
@@ -280,7 +251,7 @@ async function deleteCourse(id) {
   loadCourses();
 }
 
-/* Habits laden & löschen */
+/* Habits laden & direkt löschen */
 async function loadHabits() {
   const container = document.getElementById('habits-container');
   if (!container) return;
@@ -302,7 +273,7 @@ async function loadHabits() {
   container.innerHTML = habits.map(h => {
     const id = h._id || h.id;
     return `
-      <div class="habit-card">
+      <div class="item-card" style="--card-c: #80cbd3">
         <div style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox">
           <span>${h.name}</span>
@@ -314,10 +285,7 @@ async function loadHabits() {
 }
 
 async function deleteHabit(id) {
-  try {
-    await fetch(`/api/habits/${id}`, { method: 'DELETE' });
-  } catch (err) {}
-
+  try { await fetch(`/api/habits/${id}`, { method: 'DELETE' }); } catch (err) {}
   let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
   local = local.filter(h => (h._id || h.id) !== id);
   localStorage.setItem('userHabits', JSON.stringify(local));
@@ -325,16 +293,16 @@ async function deleteHabit(id) {
   loadHabits();
 }
 
-/* TRACKERS & INTERACTIVE MODULES */
+/* TRACKERS & SELF CARE */
 const trackerConfigs = {
-  mood: { name: "Mood & Energy Flow", colors: { '1': '#aa1111', '2': '#ff8c00', '3': '#ffb800', '4': '#2ed573', '5': '#1e90ff' }, labels: ['01 Rest', '02 Low', '03 Balanced', '04 Good', '05 Radiant'] },
-  weather: { name: "Weather & Seasons", colors: { '1': '#74b9ff', '2': '#00cec9', '3': '#ffeaa7', '4': '#fdcb6e', '5': '#6c5ce7' }, labels: ['Rainy', 'Cloudy', 'Sunny', 'Hot', 'Stormy'] },
-  health: { name: "Health & Body Mind", colors: { '1': '#e74c3c', '2': '#e67e22', '3': '#f1c40f', '4': '#2ecc71', '5': '#1abc9c' }, labels: ['Pain/Sick', 'Fatigued', 'Okay', 'Strong', 'Vital'] },
-  focus: { name: "Productivity & Focus", colors: { '1': '#d63031', '2': '#fd79a8', '3': '#a29bfe', '4': '#0984e3', '5': '#00b894' }, labels: ['Procrastinated', 'Low Focus', 'Normal', 'Deep Work', 'Flow State'] },
-  sleep: { name: "Sleep & Rest", colors: { '1': '#2d3436', '2': '#636e72', '3': '#b2bec3', '4': '#0984e3', '5': '#6c5ce7' }, labels: ['< 5h', '5-6h', '6-7h', '7-8h', '8h+ / Rested'] },
-  movement: { name: "Movement & Fitness", colors: { '1': '#b2bec3', '2': '#74b9ff', '3': '#55efc4', '4': '#ffeaa7', '5': '#ff7675' }, labels: ['Rest Day', 'Walk', 'Yoga/Stretch', 'Run', 'Gym Session'] },
-  connection: { name: "Social & Connection", colors: { '1': '#fd79a8', '2': '#e84393', '3': '#6c5ce7', '4': '#00cec9', '5': '#fdcb6e' }, labels: ['Solo Time', 'Partner', 'Friends', 'Family', 'Community'] },
-  nourishment: { name: "Nourishment & Water", colors: { '1': '#ff7675', '2': '#ffeaa7', '3': '#74b9ff', '4': '#55efc4', '5': '#00b894' }, labels: ['Low Water', 'Balanced', 'Hydrated', 'No-Sugar', 'Clean Eating'] }
+  mood: { name: "Mood & Energy Flow", colors: { '1': '#e0f2f1', '2': '#b2dfdb', '3': '#80cbd3', '4': '#4db6ac', '5': '#00897b' }, labels: ['Rest', 'Low', 'Balanced', 'Good', 'Radiant'] },
+  weather: { name: "Weather & Seasons", colors: { '1': '#b3e5fc', '2': '#81d4fa', '3': '#4fc3f7', '4': '#ffe082', '5': '#ffb74d' }, labels: ['Rainy', 'Cloudy', 'Sunny', 'Hot', 'Stormy'] },
+  health: { name: "Health & Body Mind", colors: { '1': '#ffcdd2', '2': '#f8bbd0', '3': '#e1bee7', '4': '#c8e6c9', '5': '#a5d6a7' }, labels: ['Pain/Sick', 'Fatigued', 'Okay', 'Strong', 'Vital'] },
+  focus: { name: "Productivity & Focus", colors: { '1': '#ffccbc', '2': '#ffe082', '3': '#80deea', '4': '#80cbd3', '5': '#00897b' }, labels: ['Procrastinated', 'Low Focus', 'Normal', 'Deep Work', 'Flow State'] },
+  sleep: { name: "Sleep & Rest", colors: { '1': '#cfd8dc', '2': '#b0bec5', '3': '#90a4ae', '4': '#80cbd3', '5': '#00897b' }, labels: ['< 5h', '5-6h', '6-7h', '7-8h', '8h+ / Rested'] },
+  movement: { name: "Movement & Fitness", colors: { '1': '#e0f2f1', '2': '#80cbd3', '3': '#4db6ac', '4': '#80deea', '5': '#00897b' }, labels: ['Rest Day', 'Walk', 'Yoga/Stretch', 'Run', 'Gym Session'] },
+  connection: { name: "Social & Connection", colors: { '1': '#f8bbd0', '2': '#f48fb1', '3': '#ce93d8', '4': '#80cbd3', '5': '#00897b' }, labels: ['Solo Time', 'Partner', 'Friends', 'Family', 'Community'] },
+  nourishment: { name: "Nourishment & Water", colors: { '1': '#ffccbc', '2': '#ffe082', '3': '#80cbd3', '4': '#4db6ac', '5': '#00897b' }, labels: ['Low Water', 'Balanced', 'Hydrated', 'No-Sugar', 'Clean Eating'] }
 };
 
 function initTrackers() {
@@ -368,23 +336,23 @@ function renderTracker(type) {
   let svgHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 820" width="100%">`;
 
   months.forEach((m, idx) => {
-    svgHtml += `<text x="${112 + idx * 52}" y="20" font-size="10" fill="#444" font-weight="bold" text-anchor="middle">${m}</text>`;
+    svgHtml += `<text x="${112 + idx * 52}" y="20" font-size="10" fill="#607d8b" font-weight="bold" text-anchor="middle">${m}</text>`;
   });
 
   for (let day = 1; day <= 31; day++) {
     const y = 30 + (day - 1) * 24;
-    svgHtml += `<text x="75" y="${y + 15}" font-size="9" fill="#777" text-anchor="end">${day < 10 ? '0' + day : day}</text>`;
+    svgHtml += `<text x="75" y="${y + 15}" font-size="9" fill="#90a4ae" text-anchor="end">${day < 10 ? '0' + day : day}</text>`;
 
     for (let mIdx = 0; mIdx < 12; mIdx++) {
       const x = 90 + mIdx * 52;
       const key = `${mIdx + 1}-${day}`;
       const lvl = savedData[key] || 0;
-      const fill = lvl ? config.colors[lvl] : 'none';
+      const fill = lvl ? config.colors[lvl] : '#ffffff';
 
       svgHtml += `
         <rect class="interactive-cell" data-key="${key}" data-level="${lvl}"
-              x="${x}" y="${y}" width="44" height="20" rx="3"
-              fill="${fill}" stroke="#ccc" stroke-width="0.6" />
+              x="${x}" y="${y}" width="44" height="20" rx="4"
+              fill="${fill}" stroke="#b2dfdb" stroke-width="0.8" />
       `;
     }
   }
@@ -407,7 +375,7 @@ function renderTracker(type) {
         `;
       }).join('');
 
-      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #555" data-level="0">🗑️ Feld zurücksetzen</button>`;
+      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #b0bec5" data-level="0">🗑️ Feld zurücksetzen</button>`;
 
       popup.innerHTML = menuHtml;
 
@@ -420,7 +388,7 @@ function renderTracker(type) {
         btn.onclick = () => {
           const selectedLvl = parseInt(btn.getAttribute('data-level'));
           targetCell.setAttribute('data-level', selectedLvl);
-          targetCell.setAttribute('fill', selectedLvl === 0 ? 'none' : config.colors[selectedLvl]);
+          targetCell.setAttribute('fill', selectedLvl === 0 ? '#ffffff' : config.colors[selectedLvl]);
 
           savedData[key] = selectedLvl;
           localStorage.setItem(`tracker_${type}`, JSON.stringify(savedData));
@@ -444,13 +412,14 @@ function initBookshelf() {
       const bookEl = document.createElement('div');
       bookEl.className = 'book-spine';
       bookEl.style.height = (80 + (i % 4) * 14) + 'px';
-      bookEl.style.backgroundColor = book.read ? '#e10600' : '#2a2e39';
+      bookEl.style.backgroundColor = book.read ? '#00897b' : '#ffffff';
+      bookEl.style.color = book.read ? '#ffffff' : '#2c3e50';
       bookEl.textContent = book.title;
       bookEl.addEventListener('click', () => {
         const newTitle = prompt('Buchtitel eingeben (leer lassen zum Zurücksetzen):', book.title);
         if (newTitle !== null) {
           book.title = newTitle.trim() === '' ? 'Buch ' + (i + 1) : newTitle;
-          book.read = newTitle.trim() !== '' ? !book.read : false;
+          book.read = newTitle.trim() !== '';
           savedBooks[i] = book;
           localStorage.setItem('bookshelfData', JSON.stringify(savedBooks));
           renderBooks();
@@ -479,11 +448,15 @@ function initBingo() {
     const cell = document.createElement('div');
     cell.className = 'bingo-cell';
     cell.textContent = item;
-    if (savedBingo[idx]) cell.style.backgroundColor = '#e10600';
+    if (savedBingo[idx]) {
+      cell.style.backgroundColor = '#80cbd3';
+      cell.style.color = '#ffffff';
+    }
     cell.addEventListener('click', () => {
       savedBingo[idx] = !savedBingo[idx];
       localStorage.setItem('bingoData', JSON.stringify(savedBingo));
-      cell.style.backgroundColor = savedBingo[idx] ? '#e10600' : '#1e222b';
+      cell.style.backgroundColor = savedBingo[idx] ? '#80cbd3' : '#ffffff';
+      cell.style.color = savedBingo[idx] ? '#ffffff' : '#2c3e50';
     });
     container.appendChild(cell);
   });
@@ -537,7 +510,7 @@ function initProjectProgress() {
 
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      const name = prompt('Name des neuen Projekts / Habits:');
+      const name = prompt('Name des neuen Projekts:');
       if (name) {
         projects.push({ id: 'proj_' + Date.now(), name, val: 0 });
         localStorage.setItem('customProjects', JSON.stringify(projects));
