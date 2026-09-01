@@ -38,10 +38,10 @@
       <section id="view-dashboard-studium" class="dashboard-view active">
         
         <div class="two-column-layout">
-          <!-- Linke Spalte: Control Center (Formulare, Habits, Termine, Kurse) -->
+          <!-- Linke Spalte: Control Center -->
           <div class="side-panel">
             
-            <!-- Kurs hinzufügen -->
+            <!-- 1. Kurs hinzufügen -->
             <div class="card glass-card">
               <div class="card-header">
                 <h3>Neuer Kurs</h3>
@@ -82,33 +82,28 @@
               </form>
             </div>
 
-            <!-- Habits & Termine Widget Grid -->
-            <div class="widgets-grid">
-              
-              <!-- Habits Widget -->
-              <div class="card glass-card">
-                <h3>Habits</h3>
-                <form id="add-habit-form" class="inline-form">
-                  <input type="text" id="habit-name" placeholder="Neues Habit..." required>
-                  <button type="submit" class="btn-primary">+</button>
-                </form>
-                <div id="habits-container" class="item-list"></div>
-              </div>
-
-              <!-- Termine Widget -->
-              <div class="card glass-card">
-                <h3>Termine</h3>
-                <form id="add-appointment-form" class="inline-form">
-                  <input type="text" id="app-title" placeholder="Termin..." required>
-                  <input type="date" id="app-date" required>
-                  <button type="submit" class="btn-primary">+</button>
-                </form>
-                <div id="appointments-list" class="item-list"></div>
-              </div>
-
+            <!-- 2. Habits Widget -->
+            <div class="card glass-card">
+              <h3>Habits</h3>
+              <form id="add-habit-form" class="inline-form">
+                <input type="text" id="habit-name" placeholder="Neues Habit..." required>
+                <button type="submit" class="btn-primary">+</button>
+              </form>
+              <div id="habits-container" class="item-list"></div>
             </div>
 
-            <!-- Kursliste Widget -->
+            <!-- 3. Termine Widget -->
+            <div class="card glass-card">
+              <h3>Termine</h3>
+              <form id="add-appointment-form" class="inline-form">
+                <input type="text" id="app-title" placeholder="Termin..." required>
+                <input type="date" id="app-date" required>
+                <button type="submit" class="btn-primary">+</button>
+              </form>
+              <div id="appointments-list" class="item-list"></div>
+            </div>
+
+            <!-- 4. Kursliste Widget -->
             <div class="card glass-card">
               <h3>Eingetragene Kurse</h3>
               <div id="courses-list" class="item-list"></div>

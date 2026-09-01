@@ -145,13 +145,7 @@ body {
 .side-panel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.widgets-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
 .grid-three {
@@ -242,8 +236,9 @@ input[type="color"] {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
+  margin-top: 8px;
 }
 
 .item-card {
@@ -272,7 +267,7 @@ input[type="color"] {
 /* Kalender Styling Overrides */
 .calendar-wrapper {
   height: 100%;
-  min-height: 650px;
+  min-height: 700px;
 }
 
 .fc {
