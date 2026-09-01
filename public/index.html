@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Race Control &amp; Self-Care Studio</title>
+  <title>Study &amp; Self-Care Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- NAVIGATION OBEN -->
+  <!-- TOP NAVIGATION -->
   <header class="top-nav">
     <div class="brand">
       <span class="flag-icon">✨</span>
       <h1>STUDY <span>&amp; SELF-CARE DASHBOARD</span></h1>
     </div>
     <nav class="nav-menu">
-      <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Stundenplan</button>
+      <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Planer</button>
       <button class="nav-btn" data-target="view-selfcare">🌿 Self-Care Studio</button>
     </nav>
     <div class="telemetry-bar">
@@ -27,11 +27,14 @@
   </header>
 
   <main class="content-container">
-    <!-- VIEW 1: STUDIUM DASHBOARD -->
+    <!-- VIEW 1: STUDIUM & PLANER DASHBOARD -->
     <div id="view-studium" class="dashboard-view active">
       <div class="dashboard-grid">
-        <!-- LINKS: Kurs hinzufügen, Kursliste, Habit hinzufügen & Habitliste -->
+        
+        <!-- LINKS: FORMULARE, LISTE DER KURSE, HABITS & TERMINE -->
         <section class="panel left-panel">
+          
+          <!-- KURS HINZUFÜGEN -->
           <h2><span class="icon">📖</span> Kurs hinzufügen</h2>
           <form id="add-course-form">
             <div class="form-group">
@@ -39,7 +42,7 @@
               <input type="text" id="course-title" placeholder="z.B. Regelungstechnik" required>
             </div>
             <div class="form-group">
-              <label for="course-type">Veranstaltungstyp</label>
+              <label for="course-type">Typ</label>
               <select id="course-type">
                 <option value="vorlesung">Vorlesung</option>
                 <option value="labor">Labor / Übung</option>
@@ -48,7 +51,7 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="course-day">Wochentag</label>
+                <label for="course-day">Tag</label>
                 <select id="course-day">
                   <option value="1">Montag</option>
                   <option value="2">Dienstag</option>
@@ -72,41 +75,59 @@
                 <input type="time" id="course-end" value="09:30" required>
               </div>
             </div>
-            <button type="submit" class="btn-accent">+ KURS HINZUFÜGEN</button>
+            <button type="submit" class="btn-accent">+ KURS ERSTELLEN</button>
           </form>
 
-          <!-- LISTE ALLER KURSE -->
-          <h2 style="margin-top: 1.5rem;"><span class="icon">📚</span> Meine Kurse</h2>
+          <!-- KURSE LISTE -->
+          <h2 class="section-title"><span class="icon">📚</span> Meine Kurse</h2>
           <div id="courses-list" class="item-list"></div>
 
-          <!-- HABIT HINZUFÜGEN & LISTE -->
-          <h2 style="margin-top: 1.5rem;"><span class="icon">🌱</span> Habits / Tägliche Aufgaben</h2>
+          <!-- TERMIN HINZUFÜGEN & OVERVIEW -->
+          <h2 class="section-title"><span class="icon">🗓️</span> Termin hinzufügen</h2>
+          <form id="add-appointment-form" class="appointment-form-compact">
+            <div class="form-group">
+              <label for="app-title">Termin</label>
+              <input type="text" id="app-title" placeholder="z.B. Prüfung, Arzt..." required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="app-date">Datum</label>
+                <input type="date" id="app-date" required>
+              </div>
+              <div class="form-group">
+                <label for="app-color">Farbe</label>
+                <input type="color" id="app-color" value="#80cbd3">
+              </div>
+            </div>
+            <button type="submit" class="btn-accent">+ TERMIN EINTRAGEN</button>
+          </form>
+
+          <!-- TERMIN-ÜBERSICHT -->
+          <h2 class="section-title"><span class="icon">📌</span> Nächste Termine</h2>
+          <div id="appointments-list" class="item-list"></div>
+
+          <!-- HABITS -->
+          <h2 class="section-title"><span class="icon">🌱</span> Habits / Aufgaben</h2>
           <form id="add-habit-form" class="quick-add-form">
-            <input type="text" id="habit-name" placeholder="Neues Habit (z.B. Dehnen)..." required>
+            <input type="text" id="habit-name" placeholder="Neues Habit..." required>
             <button type="submit" class="btn-accent">+</button>
           </form>
           <div id="habits-container" class="item-list"></div>
+
         </section>
 
-        <!-- RECHTS: Wochen-Stundenplan -->
+        <!-- RECHTS: ZENTRALER WOCHEN-STUNDENPLAN -->
         <section class="panel right-panel calendar-panel">
           <h2><span class="icon">📅</span> Wochen-Stundenplan</h2>
           <div id="calendar"></div>
         </section>
       </div>
-
-      <!-- UNTEN: Monats-Kalender für Termine & Aktivitäten -->
-      <section class="panel full-width-panel" style="margin-top: 1.5rem;">
-        <h2><span class="icon">🗓️</span> Termine &amp; Aktivitäten</h2>
-        <p class="subtext">💡 <strong>Klicke einfach auf einen Tag im Kalender</strong>, um einen Termin mit Uhrzeit einzutragen. Klicke auf einen bestehenden Termin, um ihn zu löschen.</p>
-        <div id="month-calendar" style="margin-top: 1rem;"></div>
-      </section>
     </div>
 
     <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
     <div id="view-selfcare" class="dashboard-view">
       <section class="panel full-width-panel" style="margin-bottom: 1.5rem; position: relative;">
-        <h2><span class="icon">✨</span> 1. Elegant 12x31 Fine-Line Trackers</h2>
+        <h2><span class="icon">✨</span> 1. Trackers</h2>
         
         <div class="tracker-selector">
           <label for="tracker-type-select">Tracker auswählen:</label>
@@ -133,13 +154,13 @@
         <div class="interactive-subgrid">
           <div class="subcard">
             <h3>📚 Bookshelf / Reading Tracker</h3>
-            <p class="subtext">Klicke ein Buch an, um Titel/Status zu ändern.</p>
+            <p class="subtext">Klicke ein Buch an, um den Titel zu ändern (Leer lassen zum Entfernen).</p>
             <div id="bookshelf-container" class="bookshelf"></div>
           </div>
 
           <div class="subcard">
             <h3>🧘 Self-Care Bingo</h3>
-            <p class="subtext">Achtsame Alltagsimpulse abhaken</p>
+            <p class="subtext">Achtsame Impulse abhaken</p>
             <div id="bingo-grid" class="bingo-container"></div>
           </div>
 
@@ -148,7 +169,7 @@
               <h3>🎨 Project &amp; Habit Progress</h3>
               <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
             </div>
-            <p class="subtext">Fortschritt deiner aktuellen Projekte verwalten</p>
+            <p class="subtext">Fortschritt deiner Projekte in Prozent (%) verwalten</p>
             <div id="project-list" class="project-progress-list"></div>
           </div>
         </div>
