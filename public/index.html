@@ -3,182 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study &amp; Self-Care Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <title>Personal Dashboard</title>
+  
+  <!-- Google Fonts & FullCalendar Stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- TOP NAVIGATION -->
-  <header class="top-nav">
-    <div class="brand">
-      <span class="flag-icon">✨</span>
-      <h1>STUDY <span>&amp; SELF-CARE DASHBOARD</span></h1>
+
+  <!-- Top Navigation / Header -->
+  <header class="top-header">
+    <div class="logo-area">
+      <h1>Dashboard</h1>
+      <span id="telemetry-time" class="time-badge">00:00:00</span>
     </div>
-    <nav class="nav-menu">
-      <button class="nav-btn active" data-target="view-studium">📚 Studium &amp; Planer</button>
-      <button class="nav-btn" data-target="view-selfcare">🌿 Self-Care Studio</button>
+    <nav class="nav-links">
+      <button class="nav-btn active" data-target="view-overview">Übersicht</button>
+      <button class="nav-btn" data-target="view-studium">Studium & Stundenplan</button>
+      <button class="nav-btn" data-target="view-selfcare">Self-Care & Tracker</button>
+      <button class="nav-btn" data-target="view-projects">Projekte</button>
     </nav>
-    <div class="telemetry-bar">
-      <div class="telemetry-item">
-        <span class="label">UHRZEIT</span>
-        <span class="value" id="telemetry-time">00:00:00</span>
-      </div>
-    </div>
   </header>
 
-  <main class="content-container">
-    <!-- VIEW 1: STUDIUM & PLANER DASHBOARD -->
-    <div id="view-studium" class="dashboard-view active">
-      <div class="dashboard-grid">
-        
-        <!-- LINKS: FORMULARE, LISTE DER KURSE, HABITS & TERMINE -->
-        <section class="panel left-panel">
-          
-          <!-- KURS HINZUFÜGEN -->
-          <h2><span class="icon">📖</span> Kurs hinzufügen</h2>
-          <form id="add-course-form">
-            <div class="form-group">
-              <label for="course-title">Kursname / Fach</label>
-              <input type="text" id="course-title" placeholder="z.B. Regelungstechnik" required>
-            </div>
-            <div class="form-group">
-              <label for="course-type">Typ</label>
-              <select id="course-type">
-                <option value="vorlesung">Vorlesung</option>
-                <option value="labor">Labor / Übung</option>
-                <option value="tutorium">Tutorium</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="course-day">Tag</label>
-                <select id="course-day">
-                  <option value="1">Montag</option>
-                  <option value="2">Dienstag</option>
-                  <option value="3">Mittwoch</option>
-                  <option value="4">Donnerstag</option>
-                  <option value="5">Freitag</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="course-color">Farbe</label>
-                <input type="color" id="course-color" value="#00897b">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="course-start">Startzeit</label>
-                <input type="time" id="course-start" value="08:00" required>
-              </div>
-              <div class="form-group">
-                <label for="course-end">Endzeit</label>
-                <input type="time" id="course-end" value="09:30" required>
-              </div>
-            </div>
-            <button type="submit" class="btn-accent">+ KURS ERSTELLEN</button>
-          </form>
+  <main class="main-content">
 
-          <!-- KURSE LISTE -->
-          <h2 class="section-title"><span class="icon">📚</span> Meine Kurse</h2>
-          <div id="courses-list" class="item-list"></div>
-
-          <!-- TERMIN HINZUFÜGEN & OVERVIEW -->
-          <h2 class="section-title"><span class="icon">🗓️</span> Termin hinzufügen</h2>
-          <form id="add-appointment-form" class="appointment-form-compact">
-            <div class="form-group">
-              <label for="app-title">Termin</label>
-              <input type="text" id="app-title" placeholder="z.B. Prüfung, Arzt..." required>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="app-date">Datum</label>
-                <input type="date" id="app-date" required>
-              </div>
-              <div class="form-group">
-                <label for="app-color">Farbe</label>
-                <input type="color" id="app-color" value="#80cbd3">
-              </div>
-            </div>
-            <button type="submit" class="btn-accent">+ TERMIN EINTRAGEN</button>
-          </form>
-
-          <!-- TERMIN-ÜBERSICHT -->
-          <h2 class="section-title"><span class="icon">📌</span> Nächste Termine</h2>
-          <div id="appointments-list" class="item-list"></div>
-
-          <!-- HABITS -->
-          <h2 class="section-title"><span class="icon">🌱</span> Habits / Aufgaben</h2>
-          <form id="add-habit-form" class="quick-add-form">
+    <!-- VIEW 1: ÜBERSICHT -->
+    <section id="view-overview" class="dashboard-view active">
+      <h2>Willkommen zurück!</h2>
+      
+      <div class="grid-container">
+        <!-- Habits Karte -->
+        <div class="card">
+          <h3>Habit Tracker</h3>
+          <form id="add-habit-form" class="inline-form">
             <input type="text" id="habit-name" placeholder="Neues Habit..." required>
-            <button type="submit" class="btn-accent">+</button>
+            <button type="submit" class="btn-primary">+</button>
           </form>
           <div id="habits-container" class="item-list"></div>
+        </div>
 
-        </section>
-
-        <!-- RECHTS: ZENTRALER WOCHEN-STUNDENPLAN -->
-        <section class="panel right-panel calendar-panel">
-          <h2><span class="icon">📅</span> Wochen-Stundenplan</h2>
-          <div id="calendar"></div>
-        </section>
+        <!-- Termine Karte -->
+        <div class="card">
+          <h3>Kommende Termine</h3>
+          <form id="add-appointment-form" class="inline-form">
+            <input type="text" id="app-title" placeholder="Termin..." required>
+            <input type="date" id="app-date" required>
+            <input type="color" id="app-color" value="#80cbd3">
+            <button type="submit" class="btn-primary">+</button>
+          </form>
+          <div id="appointments-list" class="item-list"></div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- VIEW 2: SELF-CARE TRACKER DASHBOARD -->
-    <div id="view-selfcare" class="dashboard-view">
-      <section class="panel full-width-panel" style="margin-bottom: 1.5rem; position: relative;">
-        <h2><span class="icon">✨</span> 1. Trackers</h2>
-        
-        <div class="tracker-selector">
-          <label for="tracker-type-select">Tracker auswählen:</label>
-          <select id="tracker-type-select">
-            <option value="mood">Mood &amp; Energy Flow</option>
-            <option value="weather">Weather &amp; Seasons</option>
-            <option value="health">Health &amp; Body Mind</option>
-            <option value="focus">Productivity &amp; Focus</option>
-            <option value="sleep">Sleep &amp; Rest</option>
-            <option value="movement">Movement &amp; Fitness</option>
-            <option value="connection">Social &amp; Connection</option>
-            <option value="nourishment">Nourishment &amp; Water</option>
-          </select>
-        </div>
+    <!-- VIEW 2: STUDIUM & STUNDENPLAN -->
+    <section id="view-studium" class="dashboard-view">
+      <h2>Studium & Stundenplan</h2>
 
-        <div class="tracker-legend" id="tracker-legend-display"></div>
-        <div id="interactive-tracker-container"></div>
-        <div id="tracker-popup-menu" class="tracker-menu hidden"></div>
-      </section>
-
-      <section class="panel full-width-panel">
-        <h2><span class="icon">🎨</span> 2. Fine-Art Interactive Pages</h2>
-        
-        <div class="interactive-subgrid">
-          <div class="subcard">
-            <h3>📚 Bookshelf / Reading Tracker</h3>
-            <p class="subtext">Klicke ein Buch an, um den Titel zu ändern (Leer lassen zum Entfernen).</p>
-            <div id="bookshelf-container" class="bookshelf"></div>
-          </div>
-
-          <div class="subcard">
-            <h3>🧘 Self-Care Bingo</h3>
-            <p class="subtext">Achtsame Impulse abhaken</p>
-            <div id="bingo-grid" class="bingo-container"></div>
-          </div>
-
-          <div class="subcard full-subcard">
-            <div class="subcard-header">
-              <h3>🎨 Project &amp; Habit Progress</h3>
-              <button id="add-project-btn" class="btn-small">+ NEUES PROJEKT</button>
+      <div class="studium-grid">
+        <!-- Formular & Kursliste (Links) -->
+        <div class="card sidebar-card">
+          <h3>Kurs hinzufügen</h3>
+          <form id="add-course-form" class="vertical-form">
+            <div class="form-group">
+              <label for="course-title">Kursname</label>
+              <input type="text" id="course-title" placeholder="z.B. Regelungstechnik" required />
             </div>
-            <p class="subtext">Fortschritt deiner Projekte in Prozent (%) verwalten</p>
-            <div id="project-list" class="project-progress-list"></div>
-          </div>
+
+            <div class="form-group">
+              <label for="course-type">Art</label>
+              <input type="text" id="course-type" placeholder="z.B. Vorlesung / Labor" />
+            </div>
+
+            <div class="form-group">
+              <label for="course-day">Wochentag</label>
+              <select id="course-day">
+                <option value="1">Montag</option>
+                <option value="2">Dienstag</option>
+                <option value="3">Mittwoch</option>
+                <option value="4">Donnerstag</option>
+                <option value="5">Freitag</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="course-start">Start</label>
+                <input type="time" id="course-start" value="08:00" required />
+              </div>
+              <div class="form-group">
+                <label for="course-end">Ende</label>
+                <input type="time" id="course-end" value="09:30" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="course-color">Farbe</label>
+              <input type="color" id="course-color" value="#00897b" />
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">Kurs eintragen</button>
+          </form>
+
+          <hr class="divider">
+
+          <h3>Meine Kurse</h3>
+          <div id="courses-list" class="item-list"></div>
         </div>
-      </section>
-    </div>
+
+        <!-- Kalender (Rechts) -->
+        <div class="card calendar-card">
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: SELF-CARE & TRACKER -->
+    <section id="view-selfcare" class="dashboard-view">
+      <h2>Self-Care & Pixel-Tracker</h2>
+
+      <div class="tracker-header card">
+        <label for="tracker-type-select"><strong>Tracker auswählen:</strong></label>
+        <select id="tracker-type-select">
+          <option value="mood">Mood & Energy Flow</option>
+          <option value="weather">Weather & Seasons</option>
+          <option value="health">Health & Body Mind</option>
+          <option value="focus">Productivity & Focus</option>
+          <option value="sleep">Sleep & Rest</option>
+          <option value="movement">Movement & Fitness</option>
+          <option value="connection">Social & Connection</option>
+          <option value="nourishment">Nourishment & Water</option>
+        </select>
+
+        <div id="tracker-legend-display" class="legend-container"></div>
+      </div>
+
+      <!-- Interaktives Tracker-Raster -->
+      <div class="card relative-container">
+        <div id="interactive-tracker-container"></div>
+        <!-- Popup Menu zum Einfärben der Pixel -->
+        <div id="tracker-popup-menu" class="popup-menu hidden"></div>
+      </div>
+
+      <div class="grid-container" style="margin-top: 20px;">
+        <!-- Bücherregal -->
+        <div class="card">
+          <h3>Bücherregal</h3>
+          <p class="subtext">Klicke auf ein Buch, um den Titel einzutragen.</p>
+          <div id="bookshelf-container" class="bookshelf-grid"></div>
+        </div>
+
+        <!-- Bingo Grid -->
+        <div class="card">
+          <h3>Self-Care Bingo</h3>
+          <div id="bingo-grid" class="bingo-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: PROJEKTE -->
+    <section id="view-projects" class="dashboard-view">
+      <h2>Projekt-Fortschritt</h2>
+      <div class="card">
+        <div class="card-header-flex">
+          <h3>Meine Projekte</h3>
+          <button id="add-project-btn" class="btn-primary">+ Neues Projekt</button>
+        </div>
+        <div id="project-list" class="project-container"></div>
+      </div>
+    </section>
+
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/de.global.min.js"></script>
+  <!-- FullCalendar JS Script -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/de.js"></script>
+
+  <!-- Haupt-Script -->
   <script src="app.js"></script>
 </body>
 </html>

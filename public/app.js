@@ -17,13 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addCourseForm) {
     addCourseForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const selectedDay = parseInt(document.getElementById('course-day')?.value || '1');
+
       const courseObj = {
         id: 'c_' + Date.now(),
         title: document.getElementById('course-title').value,
         type: document.getElementById('course-type')?.value || '',
-        dayOfWeek: parseInt(document.getElementById('course-day')?.value || '1'),
-        startTime: document.getElementById('course-start')?.value || '',
-        endTime: document.getElementById('course-end')?.value || '',
+        daysOfWeek: [selectedDay], // Wichtig für FullCalendar: Array der Wochentage (1 = Mo, ..., 5 = Fr)
+        startTime: document.getElementById('course-start')?.value || '08:00',
+        endTime: document.getElementById('course-end')?.value || '09:30',
         color: document.getElementById('course-color')?.value || '#00897b'
       };
 
@@ -202,7 +205,6 @@ async function loadCourses() {
       <button class="btn-delete" title="Kurs löschen">🗑️</button>
     `;
 
-    // Lösch-Funktion exakt wie beim Project Progress an den Button hängen
     card.querySelector('.btn-delete').addEventListener('click', async () => {
       try { await fetch(`/api/events/${id}`, { method: 'DELETE' }); } catch (err) {}
       
