@@ -1,18 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // --- LOCAL STORAGE HELPERS ---
+  const loadData = (key, fallback) => {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : fallback;
+    } catch (e) {
+      console.error('Fehler beim Laden von ' + key, e);
+      return fallback;
+    }
+  };
+  const saveData = (key, data) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      console.error('Fehler beim Speichern von ' + key, e);
+    }
+  };
+
   // --- 1. UHRZEIT ANZEIGE ---
   function updateTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('de-DE');
     const timeElem = document.getElementById('telemetry-time');
-    if (timeElem) timeElem.textContent = timeStr;
+    if (timeElem) {
+      timeElem.textContent = new Date().toLocaleTimeString('de-DE');
+    }
   }
   setInterval(updateTime, 1000);
   updateTime();
-
-  // --- LOCAL STORAGE HELPERS ---
-  const loadData = (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback;
-  const saveData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
   // --- 2. NAVIGATION ZWISCHEN SEITEN ---
   const navButtons = document.querySelectorAll('.nav-btn');
@@ -30,17 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetView) targetView.classList.add('active');
 
       if (targetId === 'view-dashboard-studium' && window.calendar) {
-        window.calendar.render();
+        setTimeout(() => window.calendar.render(), 50);
       }
     });
   });
 
-  // --- 3. FULLCALENDAR INTEGRATION ---
+  // --- 3. FULLCALENDAR INTEGRATION (KURSE + TERMINE) ---
   const calendarEl = document.getElementById('calendar');
   let savedCourses = loadData('my_dashboard_courses', []);
   let savedAppointments = loadData('my_dashboard_appointments', []);
 
-  // Events für Kurse (wiederkehrend)
   function courseToEvent(course) {
     return {
       id: course.id,
@@ -48,13 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
       daysOfWeek: [parseInt(course.day)],
       startTime: course.start,
       endTime: course.end,
-      backgroundColor: course.color,
-      borderColor: course.color,
+      backgroundColor: course.color || '#00897b',
+      borderColor: course.color || '#00897b',
       textColor: '#ffffff'
     };
   }
 
-  // Events für Termine (konkretes Datum)
   function appointmentToEvent(app) {
     const evt = {
       id: app.id,
@@ -75,48 +87,51 @@ document.addEventListener('DOMContentLoaded', () => {
     return evt;
   }
 
-  // Zusammenführen aller Events
   function getAllEvents() {
-    const courseEvents = savedCourses.map(courseToEvent);
-    const appointmentEvents = savedAppointments.map(appointmentToEvent);
-    return [...courseEvents, ...appointmentEvents];
+    return [
+      ...savedCourses.map(courseToEvent),
+      ...savedAppointments.map(appointmentToEvent)
+    ];
   }
 
-  window.calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'timeGridWeek',
-    locale: 'de',
-    firstDay: 1,
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGridWeek,timeGridDay'
-    },
-    slotMinTime: '07:00:00',
-    slotMaxTime: '21:00:00',
-    allDaySlot: true,
-    hiddenDays: [0, 6],
-    events: getAllEvents()
-  });
-
-  window.calendar.render();
+  if (calendarEl) {
+    window.calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek',
+      locale: 'de',
+      firstDay: 1,
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'timeGridWeek,timeGridDay'
+      },
+      slotMinTime: '07:00:00',
+      slotMaxTime: '21:00:00',
+      allDaySlot: true,
+      hiddenDays: [0, 6],
+      events: getAllEvents()
+    });
+    window.calendar.render();
+  }
 
   // --- KURSE VERWALTEN ---
   const addCourseForm = document.getElementById('add-course-form');
   const coursesListEl = document.getElementById('courses-list');
 
   function renderCoursesList() {
+    if (!coursesListEl) return;
     coursesListEl.innerHTML = '';
     savedCourses.forEach(course => {
       const item = document.createElement('div');
       item.className = 'item-card';
-      item.style.setProperty('--card-c', course.color);
+      item.style.setProperty('--card-c', course.color || '#00897b');
       item.innerHTML = `
         <div>
           <strong>${course.title}</strong> ${course.type ? `(${course.type})` : ''}<br>
           <small>${getDayName(course.day)} ${course.start} - ${course.end}</small>
         </div>
-        <button class="btn-delete" onclick="deleteCourse('${course.id}')">✕</button>
+        <button class="btn-delete" data-id="${course.id}">✕</button>
       `;
+      item.querySelector('.btn-delete').addEventListener('click', () => deleteCourse(course.id));
       coursesListEl.appendChild(item);
     });
   }
@@ -126,35 +141,38 @@ document.addEventListener('DOMContentLoaded', () => {
     return days[dayNum] || '';
   }
 
-  addCourseForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newCourse = {
-      id: 'course_' + Date.now(),
-      title: document.getElementById('course-title').value,
-      type: document.getElementById('course-type').value,
-      day: document.getElementById('course-day').value,
-      start: document.getElementById('course-start').value,
-      end: document.getElementById('course-end').value,
-      color: document.getElementById('course-color').value
-    };
+  if (addCourseForm) {
+    addCourseForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newCourse = {
+        id: 'course_' + Date.now(),
+        title: document.getElementById('course-title').value,
+        type: document.getElementById('course-type').value,
+        day: document.getElementById('course-day').value,
+        start: document.getElementById('course-start').value,
+        end: document.getElementById('course-end').value,
+        color: document.getElementById('course-color').value
+      };
 
-    savedCourses.push(newCourse);
-    saveData('my_dashboard_courses', savedCourses);
+      savedCourses.push(newCourse);
+      saveData('my_dashboard_courses', savedCourses);
 
-    window.calendar.addEvent(courseToEvent(newCourse));
-    renderCoursesList();
-    addCourseForm.reset();
-  });
+      if (window.calendar) window.calendar.addEvent(courseToEvent(newCourse));
+      renderCoursesList();
+      addCourseForm.reset();
+    });
+  }
 
-  window.deleteCourse = function(id) {
+  function deleteCourse(id) {
     savedCourses = savedCourses.filter(c => c.id !== id);
     saveData('my_dashboard_courses', savedCourses);
 
-    const calEvent = window.calendar.getEventById(id);
-    if (calEvent) calEvent.remove();
-
+    if (window.calendar) {
+      const calEvent = window.calendar.getEventById(id);
+      if (calEvent) calEvent.remove();
+    }
     renderCoursesList();
-  };
+  }
 
   renderCoursesList();
 
@@ -163,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const appointmentsList = document.getElementById('appointments-list');
 
   function renderAppointments() {
+    if (!appointmentsList) return;
     appointmentsList.innerHTML = '';
     savedAppointments.forEach(app => {
       const el = document.createElement('div');
@@ -176,40 +195,44 @@ document.addEventListener('DOMContentLoaded', () => {
           <strong>📌 ${app.title}</strong><br>
           <small>${app.date}${timeInfo}</small>
         </div>
-        <button class="btn-delete" onclick="deleteAppointment('${app.id}')">✕</button>
+        <button class="btn-delete" data-id="${app.id}">✕</button>
       `;
+      el.querySelector('.btn-delete').addEventListener('click', () => deleteAppointment(app.id));
       appointmentsList.appendChild(el);
     });
   }
 
-  appointmentForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newAppointment = {
-      id: 'app_' + Date.now(),
-      title: document.getElementById('app-title').value,
-      date: document.getElementById('app-date').value,
-      start: document.getElementById('app-start').value,
-      end: document.getElementById('app-end').value,
-      color: document.getElementById('app-color').value
-    };
+  if (appointmentForm) {
+    appointmentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newAppointment = {
+        id: 'app_' + Date.now(),
+        title: document.getElementById('app-title').value,
+        date: document.getElementById('app-date').value,
+        start: document.getElementById('app-start').value,
+        end: document.getElementById('app-end').value,
+        color: document.getElementById('app-color').value
+      };
 
-    savedAppointments.push(newAppointment);
-    saveData('my_dashboard_appointments', savedAppointments);
+      savedAppointments.push(newAppointment);
+      saveData('my_dashboard_appointments', savedAppointments);
 
-    window.calendar.addEvent(appointmentToEvent(newAppointment));
-    renderAppointments();
-    appointmentForm.reset();
-  });
+      if (window.calendar) window.calendar.addEvent(appointmentToEvent(newAppointment));
+      renderAppointments();
+      appointmentForm.reset();
+    });
+  }
 
-  window.deleteAppointment = function(id) {
+  function deleteAppointment(id) {
     savedAppointments = savedAppointments.filter(a => a.id !== id);
     saveData('my_dashboard_appointments', savedAppointments);
 
-    const calEvent = window.calendar.getEventById(id);
-    if (calEvent) calEvent.remove();
-
+    if (window.calendar) {
+      const calEvent = window.calendar.getEventById(id);
+      if (calEvent) calEvent.remove();
+    }
     renderAppointments();
-  };
+  }
 
   renderAppointments();
 
@@ -223,41 +246,47 @@ document.addEventListener('DOMContentLoaded', () => {
   const habitsContainer = document.getElementById('habits-container');
 
   function renderHabits() {
+    if (!habitsContainer) return;
     habitsContainer.innerHTML = '';
     habits.forEach(h => {
       const el = document.createElement('div');
       el.className = 'item-card';
       el.innerHTML = `
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" ${h.done ? 'checked' : ''} onchange="toggleHabit('${h.id}')">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width: 100%;">
+          <input type="checkbox" ${h.done ? 'checked' : ''}>
           <span style="${h.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${h.name}</span>
         </label>
-        <button class="btn-delete" onclick="deleteHabit('${h.id}')">✕</button>
+        <button class="btn-delete">✕</button>
       `;
+      
+      el.querySelector('input[type="checkbox"]').addEventListener('change', () => {
+        h.done = !h.done;
+        saveData('my_dashboard_habits', habits);
+        renderHabits();
+      });
+
+      el.querySelector('.btn-delete').addEventListener('click', () => {
+        habits = habits.filter(item => item.id !== h.id);
+        saveData('my_dashboard_habits', habits);
+        renderHabits();
+      });
+
       habitsContainer.appendChild(el);
     });
   }
 
-  habitForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById('habit-name');
-    habits.push({ id: 'h_' + Date.now(), name: nameInput.value, done: false });
-    saveData('my_dashboard_habits', habits);
-    renderHabits();
-    nameInput.value = '';
-  });
-
-  window.toggleHabit = function(id) {
-    habits = habits.map(h => h.id === id ? { ...h, done: !h.done } : h);
-    saveData('my_dashboard_habits', habits);
-    renderHabits();
-  };
-
-  window.deleteHabit = function(id) {
-    habits = habits.filter(h => h.id !== id);
-    saveData('my_dashboard_habits', habits);
-    renderHabits();
-  };
+  if (habitForm) {
+    habitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('habit-name');
+      if (nameInput && nameInput.value.trim() !== '') {
+        habits.push({ id: 'h_' + Date.now(), name: nameInput.value.trim(), done: false });
+        saveData('my_dashboard_habits', habits);
+        renderHabits();
+        nameInput.value = '';
+      }
+    });
+  }
 
   renderHabits();
 
@@ -305,8 +334,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let trackerData = loadData('my_pixel_tracker_data', {});
 
   function renderTracker() {
-    const type = trackerTypeSelect.value;
-    const config = trackerConfigs[type];
+    if (!trackerTypeSelect || !trackerGridContainer || !legendContainer) return;
+
+    const type = trackerTypeSelect.value || 'mood';
+    const config = trackerConfigs[type] || trackerConfigs.mood;
 
     legendContainer.innerHTML = '';
     config.labels.forEach((label, idx) => {
@@ -343,10 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openPopupMenu(e, key, config) {
+    if (!popupMenu) return;
     popupMenu.innerHTML = '';
     popupMenu.classList.remove('hidden');
-    popupMenu.style.left = `${e.clientX}px`;
-    popupMenu.style.top = `${e.clientY}px`;
+
+    const rect = trackerGridContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    popupMenu.style.left = `${Math.min(x, rect.width - 150)}px`;
+    popupMenu.style.top = `${y + 10}px`;
 
     config.labels.forEach((label, idx) => {
       const btn = document.createElement('button');
@@ -364,13 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('click', (e) => {
-    if (!popupMenu.contains(e.target) && !e.target.classList.contains('tracker-pixel')) {
+    if (popupMenu && !popupMenu.contains(e.target) && !e.target.classList.contains('tracker-pixel')) {
       popupMenu.classList.add('hidden');
     }
   });
 
-  trackerTypeSelect.addEventListener('change', renderTracker);
-  renderTracker();
+  if (trackerTypeSelect) {
+    trackerTypeSelect.addEventListener('change', renderTracker);
+    renderTracker();
+  }
 
   // --- BÜCHERREGAL ---
   let books = loadData('my_bookshelf_data', [
@@ -382,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bookshelfContainer = document.getElementById('bookshelf-container');
 
   function renderBookshelf() {
+    if (!bookshelfContainer) return;
     bookshelfContainer.innerHTML = '';
     books.forEach(book => {
       const spine = document.createElement('div');
@@ -391,8 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
       spine.title = book.title;
       spine.addEventListener('click', () => {
         const newTitle = prompt('Buchtitel ändern:', book.title);
-        if (newTitle !== null) {
-          book.title = newTitle;
+        if (newTitle !== null && newTitle.trim() !== '') {
+          book.title = newTitle.trim();
           saveData('my_bookshelf_data', books);
           renderBookshelf();
         }
@@ -415,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bingoGrid = document.getElementById('bingo-grid');
 
   function renderBingo() {
+    if (!bingoGrid) return;
     bingoGrid.innerHTML = '';
     bingoTasks.forEach((task, idx) => {
       const cell = document.createElement('div');
@@ -441,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const addProjectBtn = document.getElementById('add-project-btn');
 
   function renderProjects() {
+    if (!projectList) return;
     projectList.innerHTML = '';
     projects.forEach(p => {
       const el = document.createElement('div');
@@ -448,28 +490,34 @@ document.addEventListener('DOMContentLoaded', () => {
       el.innerHTML = `
         <div class="project-header">
           <span>${p.name}</span>
-          <span>${p.progress}%</span>
+          <span class="progress-val">${p.progress}%</span>
         </div>
-        <input type="range" min="0" max="100" value="${p.progress}" onchange="updateProjectProgress('${p.id}', this.value)">
+        <input type="range" min="0" max="100" value="${p.progress}">
       `;
+      
+      const rangeInput = el.querySelector('input[type="range"]');
+      const progressVal = el.querySelector('.progress-val');
+
+      rangeInput.addEventListener('input', (e) => {
+        p.progress = parseInt(e.target.value);
+        progressVal.textContent = `${p.progress}%`;
+        saveData('my_projects_data', projects);
+      });
+
       projectList.appendChild(el);
     });
   }
 
-  window.updateProjectProgress = function(id, val) {
-    projects = projects.map(p => p.id === id ? { ...p, progress: parseInt(val) } : p);
-    saveData('my_projects_data', projects);
-    renderProjects();
-  };
-
-  addProjectBtn.addEventListener('click', () => {
-    const name = prompt('Projektname:');
-    if (name) {
-      projects.push({ id: 'p_' + Date.now(), name, progress: 0 });
-      saveData('my_projects_data', projects);
-      renderProjects();
-    }
-  });
+  if (addProjectBtn) {
+    addProjectBtn.addEventListener('click', () => {
+      const name = prompt('Projektname:');
+      if (name && name.trim() !== '') {
+        projects.push({ id: 'p_' + Date.now(), name: name.trim(), progress: 0 });
+        saveData('my_projects_data', projects);
+        renderProjects();
+      }
+    });
+  }
 
   renderProjects();
 
