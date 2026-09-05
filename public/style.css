@@ -461,33 +461,42 @@ input[type="range"] {
 /* Pixel Grid Fixes */
 #interactive-tracker-container {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .pixel-grid {
   display: grid !important;
-  grid-template-columns: repeat(31, 1fr) !important;
-  gap: 6px;
+  /* 7 Spalten (Montag bis Sonntag) für einen Monatskalender-Look */
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 10px;
   width: 100%;
+  max-width: 420px; /* Begrenzt die Gesamtbreite für schöne Quadrate */
+  margin: 0 auto;
 }
 
 .tracker-pixel {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  min-height: 24px;
-  border-radius: 4px;
+  aspect-ratio: 1 / 1 !important; /* Erzwingt quadratische Form */
+  border-radius: 6px;
   cursor: pointer;
   border: 1px solid var(--card-border);
   box-sizing: border-box;
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  transition: transform 0.15 ease, border-color 0.15s ease;
 }
 
 .tracker-pixel:hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
   border-color: var(--accent-teal);
   z-index: 2;
 }
 
-/* Projekt Löschen Button Hover */
-.btn-delete-proj:hover {
-  color: #f44336 !important;
+/* Legenden-Fix */
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: var(--c);
+  border-radius: 3px;
 }
