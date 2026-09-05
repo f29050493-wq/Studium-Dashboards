@@ -457,3 +457,29 @@ input[type="range"] {
   align-items: center;
   margin-bottom: 12px;
 }  
+/* Pixel Grid Fixes */
+.pixel-grid {
+  display: grid;
+  grid-template-columns: repeat(31, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.tracker-pixel {
+  width: 100%;
+  min-height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+  transition: transform 0.1s ease, border-color 0.1s ease;
+}
+
+.tracker-pixel:hover {
+  transform: scale(1.08);
+  border-color: var(--accent-teal);
+}
+
+/* Projekt Löschen Button Hover */
+.btn-delete-proj:hover {
+  color: #f44336 !important;
+}

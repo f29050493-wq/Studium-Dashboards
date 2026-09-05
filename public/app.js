@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // --- 3. FULLCALENDAR INTEGRATION (KURSE + TERMINE) ---
+  // --- 3. FULLCALENDAR INTEGRATION ---
   const calendarEl = document.getElementById('calendar');
   let savedCourses = loadData('my_dashboard_courses', []);
   let savedAppointments = loadData('my_dashboard_appointments', []);
@@ -350,18 +350,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     trackerGridContainer.innerHTML = '';
     const grid = document.createElement('div');
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(31, 1fr)';
-    grid.style.gap = '4px';
+    grid.className = 'pixel-grid';
 
     for (let day = 1; day <= 31; day++) {
       const key = `${type}_${day}`;
       const pixel = document.createElement('div');
       pixel.className = 'tracker-pixel';
-      pixel.style.aspectRatio = '1';
-      pixel.style.borderRadius = '4px';
-      pixel.style.cursor = 'pointer';
-      pixel.style.border = '1px solid var(--card-border)';
 
       const val = trackerData[key];
       pixel.style.backgroundColor = val !== undefined ? config.colors[val] : '#ffffff';
@@ -474,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- PROJEKTE ---
   let projects = loadData('my_projects_data', [
-    { id: 'p1', name: 'Bachelorarbeit', progress: 40 },
+    { id: 'p1', name: 'Bachelorarbeit', progress: 0 },
     { id: 'p2', name: 'Website Redesign', progress: 75 }
   ]);
 
@@ -490,18 +484,28 @@ document.addEventListener('DOMContentLoaded', () => {
       el.innerHTML = `
         <div class="project-header">
           <span>${p.name}</span>
-          <span class="progress-val">${p.progress}%</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="progress-val">${p.progress}%</span>
+            <button class="btn-delete-proj" style="background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size: 0.85rem;">✕</button>
+          </div>
         </div>
         <input type="range" min="0" max="100" value="${p.progress}">
       `;
       
       const rangeInput = el.querySelector('input[type="range"]');
       const progressVal = el.querySelector('.progress-val');
+      const deleteBtn = el.querySelector('.btn-delete-proj');
 
       rangeInput.addEventListener('input', (e) => {
         p.progress = parseInt(e.target.value);
         progressVal.textContent = `${p.progress}%`;
         saveData('my_projects_data', projects);
+      });
+
+      deleteBtn.addEventListener('click', () => {
+        projects = projects.filter(item => item.id !== p.id);
+        saveData('my_projects_data', projects);
+        renderProjects();
       });
 
       projectList.appendChild(el);
