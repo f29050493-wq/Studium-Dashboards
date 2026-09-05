@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderHabits();
 
-  // --- PIXEL TRACKER ---
+  // --- PIXEL TRACKER MIT MONAT UND TAGEN ---
   const trackerTypeSelect = document.getElementById('tracker-type-select');
   const legendContainer = document.getElementById('tracker-legend-display');
   const trackerGridContainer = document.getElementById('interactive-tracker-container');
@@ -331,6 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const monthNames = [
+    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+  ];
+
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
   let trackerData = loadData('my_pixel_tracker_data', {});
 
   function renderTracker() {
@@ -339,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = trackerTypeSelect.value || 'mood';
     const config = trackerConfigs[type] || trackerConfigs.mood;
 
+    // Legende
     legendContainer.innerHTML = '';
     config.labels.forEach((label, idx) => {
       const item = document.createElement('div');
@@ -349,22 +357,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     trackerGridContainer.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tracker-wrapper';
+
+    // Header mit Navigations-Buttons
+    const header = document.createElement('div');
+    header.className = 'tracker-header-nav';
+    header.innerHTML = `
+      <button class="tracker-nav-btn" id="prev-month-btn">‹</button>
+      <span class="tracker-month-title">${monthNames[currentMonth]} ${currentYear}</span>
+      <button class="tracker-nav-btn" id="next-month-btn">›</button>
+    `;
+    wrapper.appendChild(header);
+
+    // Grid Container
     const grid = document.createElement('div');
     grid.className = 'pixel-grid';
 
-    for (let day = 1; day <= 31; day++) {
-      const key = `${type}_${day}`;
+    // Wochentage (Mo - So)
+    const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    weekDays.forEach(day => {
+      const dayHeader = document.createElement('div');
+      dayHeader.className = 'pixel-weekday';
+      dayHeader.textContent = day;
+      grid.appendChild(dayHeader);
+    });
+
+    // Berechnung Tage & Offset
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay() - 1;
+    if (firstDayIndex === -1) firstDayIndex = 6;
+
+    // Leere Felder vor dem 1. des Monats
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'pixel-empty';
+      grid.appendChild(emptyCell);
+    }
+
+    // Tage des Monats
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${type}_${currentYear}_${currentMonth + 1}_${day}`;
       const pixel = document.createElement('div');
       pixel.className = 'tracker-pixel';
 
       const val = trackerData[key];
-      pixel.style.backgroundColor = val !== undefined ? config.colors[val] : '#ffffff';
+      if (val !== undefined) {
+        pixel.style.backgroundColor = config.colors[val];
+        pixel.classList.add('filled');
+      }
+
+      const label = document.createElement('span');
+      label.className = 'pixel-day-number';
+      label.textContent = day;
+      pixel.appendChild(label);
 
       pixel.addEventListener('click', (e) => openPopupMenu(e, key, config));
       grid.appendChild(pixel);
     }
 
-    trackerGridContainer.appendChild(grid);
+    wrapper.appendChild(grid);
+    trackerGridContainer.appendChild(wrapper);
+
+    // Monat wechseln Listener
+    document.getElementById('prev-month-btn').addEventListener('click', () => {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderTracker();
+    });
+
+    document.getElementById('next-month-btn').addEventListener('click', () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderTracker();
+    });
   }
 
   function openPopupMenu(e, key, config) {
@@ -525,4 +598,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderProjects();
 
-}); 
+});

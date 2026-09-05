@@ -458,45 +458,106 @@ input[type="range"] {
   margin-bottom: 12px;
 }
 
-/* Pixel Grid Fixes */
+/* Pixel Grid & Kalender Layout */
 #interactive-tracker-container {
   width: 100%;
   display: flex;
   justify-content: center;
 }
 
+.tracker-wrapper {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.tracker-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.tracker-month-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.tracker-nav-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.tracker-nav-btn:hover {
+  background: var(--accent-teal);
+  color: #ffffff;
+  border-color: var(--accent-teal);
+}
+
 .pixel-grid {
   display: grid !important;
-  /* 7 Spalten (Montag bis Sonntag) für einen Monatskalender-Look */
   grid-template-columns: repeat(7, 1fr) !important;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  max-width: 420px; /* Begrenzt die Gesamtbreite für schöne Quadrate */
-  margin: 0 auto;
+}
+
+.pixel-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding-bottom: 4px;
+}
+
+.pixel-empty {
+  aspect-ratio: 1 / 1;
 }
 
 .tracker-pixel {
   width: 100%;
-  aspect-ratio: 1 / 1 !important; /* Erzwingt quadratische Form */
-  border-radius: 6px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
   cursor: pointer;
   border: 1px solid var(--card-border);
+  background-color: #ffffff;
   box-sizing: border-box;
-  transition: transform 0.15 ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .tracker-pixel:hover {
-  transform: scale(1.12);
+  transform: scale(1.1);
   border-color: var(--accent-teal);
   z-index: 2;
 }
 
-/* Legenden-Fix */
-.legend-item::before {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background: var(--c);
-  border-radius: 3px;
+.pixel-day-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* Weiße Zahl auf buntem Hintergrund */
+.tracker-pixel.filled .pixel-day-number {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
