@@ -1,537 +1,443 @@
 document.addEventListener('DOMContentLoaded', () => {
-  initNav();
-  initClock();
-  initCalendar();
-  loadCourses();
-  loadAppointments();
-  loadHabits();
-  
-  // Self-Care & Projekte
-  initTrackers();
-  initBookshelf();
-  initBingo();
-  initProjectProgress();
 
-  // KURS HINZUFÜGEN
-  const addCourseForm = document.getElementById('add-course-form');
-  if (addCourseForm) {
-    addCourseForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const selectedDay = parseInt(document.getElementById('course-day')?.value || '1');
-
-      const courseObj = {
-        id: 'c_' + Date.now(),
-        title: document.getElementById('course-title').value,
-        type: document.getElementById('course-type')?.value || '',
-        daysOfWeek: [selectedDay],
-        startTime: document.getElementById('course-start')?.value || '08:00',
-        endTime: document.getElementById('course-end')?.value || '09:30',
-        color: document.getElementById('course-color')?.value || '#00897b'
-      };
-
-      try {
-        await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(courseObj)
-        });
-      } catch (err) {}
-
-      const localCourses = JSON.parse(localStorage.getItem('userCourses') || '[]');
-      localCourses.push(courseObj);
-      localStorage.setItem('userCourses', JSON.stringify(localCourses));
-
-      addCourseForm.reset();
-      if (window.calendarObj) window.calendarObj.refetchEvents();
-      loadCourses();
-    });
+  // --- 1. UHRZEIT ANZEIGE ---
+  function updateTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('de-DE');
+    const timeElem = document.getElementById('telemetry-time');
+    if (timeElem) timeElem.textContent = timeStr;
   }
+  setInterval(updateTime, 1000);
+  updateTime();
 
-  // TERMIN HINZUFÜGEN
-  const addAppForm = document.getElementById('add-appointment-form');
-  if (addAppForm) {
-    addAppForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const appObj = {
-        id: 'app_' + Date.now(),
-        title: document.getElementById('app-title').value,
-        date: document.getElementById('app-date').value,
-        color: '#80cbd3'
-      };
-
-      const localApps = JSON.parse(localStorage.getItem('userAppointments') || '[]');
-      localApps.push(appObj);
-      localStorage.setItem('userAppointments', JSON.stringify(localApps));
-
-      addAppForm.reset();
-      loadAppointments();
-    });
-  }
-
-  // HABIT HINZUFÜGEN
-  const addHabitForm = document.getElementById('add-habit-form');
-  if (addHabitForm) {
-    addHabitForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('habit-name');
-      if (!input) return;
-      const name = input.value.trim();
-      if (!name) return;
-
-      const habitObj = { id: 'h_' + Date.now(), name };
-
-      try {
-        await fetch('/api/habits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(habitObj)
-        });
-      } catch (err) {}
-
-      const localHabits = JSON.parse(localStorage.getItem('userHabits') || '[]');
-      localHabits.push(habitObj);
-      localStorage.setItem('userHabits', JSON.stringify(localHabits));
-
-      input.value = '';
-      loadHabits();
-    });
-  }
-});
-
-function initNav() {
-  const buttons = document.querySelectorAll('.nav-btn');
+  // --- 2. NAVIGATION ZWISCHEN SEITEN ---
+  const navButtons = document.querySelectorAll('.nav-btn');
   const views = document.querySelectorAll('.dashboard-view');
 
-  buttons.forEach(btn => {
+  navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetId = btn.getAttribute('data-target');
-
-      buttons.forEach(b => b.classList.remove('active'));
+      
+      navButtons.forEach(b => b.classList.remove('active'));
       views.forEach(v => v.classList.remove('active'));
 
       btn.classList.add('active');
       const targetView = document.getElementById(targetId);
       if (targetView) targetView.classList.add('active');
 
-      if (targetId === 'view-dashboard-studium' && window.calendarObj) {
-        setTimeout(() => window.calendarObj.updateSize(), 100);
+      // Falls Kalender gerendert werden muss nach Tab-Wechsel
+      if (targetId === 'view-dashboard-studium' && window.calendar) {
+        window.calendar.render();
       }
     });
   });
-}
 
-function initClock() {
-  const clockEl = document.getElementById('telemetry-time');
-  setInterval(() => {
-    const now = new Date();
-    if (clockEl) {
-      clockEl.textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-  }, 1000);
-}
+  // --- LOCAL STORAGE HELPERS ---
+  const loadData = (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback;
+  const saveData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
-function initCalendar() {
+  // --- 3. FULLCALENDAR STUNDENPLAN ---
   const calendarEl = document.getElementById('calendar');
-  if (!calendarEl || typeof FullCalendar === 'undefined') return;
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    locale: 'de',
-    timeZone: 'Europe/Berlin',
+  let savedCourses = loadData('my_dashboard_courses', []);
+
+  window.calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'timeGridWeek',
-    hiddenDays: [0, 6],
-    slotMinTime: '08:00:00',
-    slotMaxTime: '19:00:00',
-    slotDuration: '00:30:00',
-    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-    headerToolbar: false,
-    allDaySlot: false,
-    events: async function(fetchInfo, successCallback) {
-      try {
-        const res = await fetch('/api/events');
-        if (res.ok) {
-          const events = await res.json();
-          successCallback(events);
-          return;
-        }
-      } catch (err) {}
-      const local = JSON.parse(localStorage.getItem('userCourses') || '[]');
-      successCallback(local);
+    locale: 'de',
+    firstDay: 1, // Montag
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'timeGridWeek,timeGridDay'
     },
-    eventDidMount: function(info) {
-      const baseColor = info.event.extendedProps.color || '#00897b';
-      info.el.style.backgroundColor = baseColor;
-      info.el.style.borderColor = baseColor;
-      info.el.style.color = '#ffffff';
-      info.el.style.borderRadius = '6px';
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
+    allDaySlot: false,
+    hiddenDays: [0, 6], // Sa & So ausblenden (optional)
+    events: savedCourses.flatMap(courseToEvents)
+  });
+
+  window.calendar.render();
+
+  // Wandelt ein Kurs-Objekt in ein wiederkehrendes FullCalendar-Event um
+  function courseToEvents(course) {
+    return [{
+      id: course.id,
+      title: course.type ? `${course.title} (${course.type})` : course.title,
+      daysOfWeek: [parseInt(course.day)],
+      startTime: course.start,
+      endTime: course.end,
+      backgroundColor: course.color, // WICHTIG: Hier wird die individuelle Farbe gesetzt!
+      borderColor: course.color,
+      textColor: '#ffffff'
+    }];
+  }
+
+  // Kurse verwalten & Liste aktualisieren
+  const addCourseForm = document.getElementById('add-course-form');
+  const coursesListEl = document.getElementById('courses-list');
+
+  function renderCoursesList() {
+    coursesListEl.innerHTML = '';
+    savedCourses.forEach(course => {
+      const item = document.createElement('div');
+      item.className = 'item-card';
+      item.style.setProperty('--card-c', course.color);
+      item.innerHTML = `
+        <div>
+          <strong>${course.title}</strong> ${course.type ? `(${course.type})` : ''}<br>
+          <small>${getDayName(course.day)} ${course.start} - ${course.end}</small>
+        </div>
+        <button class="btn-delete" onclick="deleteCourse('${course.id}')">✕</button>
+      `;
+      coursesListEl.appendChild(item);
+    });
+  }
+
+  function getDayName(dayNum) {
+    const days = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    return days[dayNum] || '';
+  }
+
+  addCourseForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newCourse = {
+      id: 'course_' + Date.now(),
+      title: document.getElementById('course-title').value,
+      type: document.getElementById('course-type').value,
+      day: document.getElementById('course-day').value,
+      start: document.getElementById('course-start').value,
+      end: document.getElementById('course-end').value,
+      color: document.getElementById('course-color').value
+    };
+
+    savedCourses.push(newCourse);
+    saveData('my_dashboard_courses', savedCourses);
+
+    // Event zum Kalender hinzufügen
+    courseToEvents(newCourse).forEach(evt => window.calendar.addEvent(evt));
+
+    renderCoursesList();
+    addCourseForm.reset();
+  });
+
+  window.deleteCourse = function(id) {
+    savedCourses = savedCourses.filter(c => c.id !== id);
+    saveData('my_dashboard_courses', savedCourses);
+
+    // Event aus dem Kalender entfernen
+    const calEvent = window.calendar.getEventById(id);
+    if (calEvent) calEvent.remove();
+
+    renderCoursesList();
+  };
+
+  renderCoursesList();
+
+  // --- 4. HABITS WIDGET ---
+  let habits = loadData('my_dashboard_habits', [
+    { id: '1', name: 'Wasser trinken', done: false },
+    { id: '2', name: '30 Min. Lesen', done: true }
+  ]);
+
+  const habitForm = document.getElementById('add-habit-form');
+  const habitsContainer = document.getElementById('habits-container');
+
+  function renderHabits() {
+    habitsContainer.innerHTML = '';
+    habits.forEach(h => {
+      const el = document.createElement('div');
+      el.className = 'item-card';
+      el.innerHTML = `
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" ${h.done ? 'checked' : ''} onchange="toggleHabit('${h.id}')">
+          <span style="${h.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${h.name}</span>
+        </label>
+        <button class="btn-delete" onclick="deleteHabit('${h.id}')">✕</button>
+      `;
+      habitsContainer.appendChild(el);
+    });
+  }
+
+  habitForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('habit-name');
+    habits.push({ id: 'h_' + Date.now(), name: nameInput.value, done: false });
+    saveData('my_dashboard_habits', habits);
+    renderHabits();
+    nameInput.value = '';
+  });
+
+  window.toggleHabit = function(id) {
+    habits = habits.map(h => h.id === id ? { ...h, done: !h.done } : h);
+    saveData('my_dashboard_habits', habits);
+    renderHabits();
+  };
+
+  window.deleteHabit = function(id) {
+    habits = habits.filter(h => h.id !== id);
+    saveData('my_dashboard_habits', habits);
+    renderHabits();
+  };
+
+  renderHabits();
+
+  // --- 5. TERMINE WIDGET ---
+  let appointments = loadData('my_dashboard_appointments', []);
+
+  const appointmentForm = document.getElementById('add-appointment-form');
+  const appointmentsList = document.getElementById('appointments-list');
+
+  function renderAppointments() {
+    appointmentsList.innerHTML = '';
+    appointments.forEach(app => {
+      const el = document.createElement('div');
+      el.className = 'item-card';
+      el.innerHTML = `
+        <div>
+          <strong>${app.title}</strong><br>
+          <small>${app.date}</small>
+        </div>
+        <button class="btn-delete" onclick="deleteAppointment('${app.id}')">✕</button>
+      `;
+      appointmentsList.appendChild(el);
+    });
+  }
+
+  appointmentForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('app-title').value;
+    const date = document.getElementById('app-date').value;
+
+    appointments.push({ id: 'app_' + Date.now(), title, date });
+    saveData('my_dashboard_appointments', appointments);
+    renderAppointments();
+
+    appointmentForm.reset();
+  });
+
+  window.deleteAppointment = function(id) {
+    appointments = appointments.filter(a => a.id !== id);
+    saveData('my_dashboard_appointments', appointments);
+    renderAppointments();
+  };
+
+  renderAppointments();
+
+  // --- 6. PIXEL TRACKER ---
+  const trackerTypeSelect = document.getElementById('tracker-type-select');
+  const legendContainer = document.getElementById('tracker-legend-display');
+  const trackerGridContainer = document.getElementById('interactive-tracker-container');
+  const popupMenu = document.getElementById('tracker-popup-menu');
+
+  const trackerConfigs = {
+    mood: {
+      labels: ['Sehr gut', 'Gut', 'Neutral', 'Schlecht', 'Stress'],
+      colors: ['#4caf50', '#8bc34a', '#ffeb3b', '#ff9800', '#f44336']
+    },
+    weather: {
+      labels: ['Sonnig', 'Bewölkt', 'Regen', 'Schnee', 'Windig'],
+      colors: ['#fbc02d', '#90a4ae', '#0288d1', '#e0e0e0', '#78909c']
+    },
+    health: {
+      labels: ['Fit', 'Müde', 'Leicht Unwohl', 'Krank', 'Erholung'],
+      colors: ['#2ea44f', '#64b5f6', '#ffb74d', '#e53935', '#ba68c8']
+    },
+    focus: {
+      labels: ['Hoher Fokus', 'Normal', 'Ablenkung', 'Keine Lust', 'Pause'],
+      colors: ['#00897b', '#4dd0e1', '#ffb74d', '#e53935', '#9e9e9e']
+    },
+    sleep: {
+      labels: ['8h+ Ruhig', '6-8h Gut', '<6h Unruhig', 'Wenig Schlaf', 'Sehr Schlecht'],
+      colors: ['#3f51b5', '#5c6bc0', '#9fa8da', '#ff9800', '#f44336']
+    },
+    movement: {
+      labels: ['Workout', 'Spaziergang', 'Dehnen/Yoga', 'Ruhetag', 'Intensiv Sport'],
+      colors: ['#4caf50', '#8bc34a', '#81c784', '#cfd8dc', '#2e7d32']
+    },
+    connection: {
+      labels: ['Freunde/Familie', 'Deep Talk', 'Allein-Zeit', 'Party/Event', 'Wenig Kontakt'],
+      colors: ['#e91e63', '#f06292', '#ba68c8', '#ff4081', '#9e9e9e']
+    },
+    nourishment: {
+      labels: ['Gesund & Viel Wasser', 'Gut', 'Fast Food', 'Wenig Trinken', 'Ausgewogen'],
+      colors: ['#26a69a', '#80cbc4', '#ff7043', '#ffa726', '#aed581']
     }
-  });
-  calendar.render();
-  window.calendarObj = calendar;
-}
+  };
 
-/* KURSE LOAD & DELETE */
-async function loadCourses() {
-  const container = document.getElementById('courses-list');
-  if (!container) return;
+  let trackerData = loadData('my_pixel_tracker_data', {});
 
-  let courses = [];
-  try {
-    const res = await fetch('/api/events');
-    if (res.ok) courses = await res.json();
-    else throw new Error();
-  } catch (err) {
-    courses = JSON.parse(localStorage.getItem('userCourses') || '[]');
-  }
+  function renderTracker() {
+    const type = trackerTypeSelect.value;
+    const config = trackerConfigs[type];
 
-  container.innerHTML = '';
-
-  if (courses.length === 0) {
-    container.innerHTML = '<p class="subtext">Keine Kurse eingetragen.</p>';
-    return;
-  }
-
-  courses.forEach((c) => {
-    const id = c._id || c.id;
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.style.setProperty('--card-c', c.color || '#00897b');
-    
-    card.innerHTML = `
-      <div>
-        <strong>${c.title}</strong>
-        <span style="display:block; font-size: 0.75rem; color: #607d8b;">${c.startTime || ''} - ${c.endTime || ''}</span>
-      </div>
-      <button class="btn-delete" title="Löschen">🗑️</button>
-    `;
-
-    card.querySelector('.btn-delete').addEventListener('click', async () => {
-      try { await fetch(`/api/events/${id}`, { method: 'DELETE' }); } catch (err) {}
-      
-      let local = JSON.parse(localStorage.getItem('userCourses') || '[]');
-      local = local.filter(course => (course._id || course.id) !== id);
-      localStorage.setItem('userCourses', JSON.stringify(local));
-
-      if (window.calendarObj) window.calendarObj.refetchEvents();
-      loadCourses();
+    // Legende bauen
+    legendContainer.innerHTML = '';
+    config.labels.forEach((label, idx) => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.style.setProperty('--c', config.colors[idx]);
+      item.textContent = label;
+      legendContainer.appendChild(item);
     });
 
-    container.appendChild(card);
-  });
-}
+    // Raster bauen (30 Tage x 12 Monate als Beispiel)
+    trackerGridContainer.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(31, 1fr)';
+    grid.style.gap = '4px';
 
-/* HABITS LOAD & DELETE */
-async function loadHabits() {
-  const container = document.getElementById('habits-container');
-  if (!container) return;
+    for (let day = 1; day <= 31; day++) {
+      const key = `${type}_${day}`;
+      const pixel = document.createElement('div');
+      pixel.className = 'tracker-pixel';
+      pixel.style.aspectRatio = '1';
+      pixel.style.borderRadius = '4px';
+      pixel.style.cursor = 'pointer';
+      pixel.style.border = '1px solid var(--card-border)';
 
-  let habits = [];
-  try {
-    const res = await fetch('/api/habits');
-    if (res.ok) habits = await res.json();
-    else throw new Error();
-  } catch (err) {
-    habits = JSON.parse(localStorage.getItem('userHabits') || '[]');
+      const val = trackerData[key];
+      pixel.style.backgroundColor = val !== undefined ? config.colors[val] : '#ffffff';
+
+      pixel.addEventListener('click', (e) => {
+        openPopupMenu(e, key, config);
+      });
+
+      grid.appendChild(pixel);
+    }
+
+    trackerGridContainer.appendChild(grid);
   }
 
-  container.innerHTML = '';
+  function openPopupMenu(e, key, config) {
+    popupMenu.innerHTML = '';
+    popupMenu.classList.remove('hidden');
+    popupMenu.style.left = `${e.clientX}px`;
+    popupMenu.style.top = `${e.clientY}px`;
 
-  if (habits.length === 0) {
-    container.innerHTML = '<p class="subtext">Keine Habits.</p>';
-    return;
-  }
-
-  habits.forEach((h) => {
-    const id = h._id || h.id;
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.style.setProperty('--card-c', '#80cbd3');
-
-    card.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox">
-        <span>${h.name}</span>
-      </div>
-      <button class="btn-delete" title="Löschen">🗑️</button>
-    `;
-
-    card.querySelector('.btn-delete').addEventListener('click', async () => {
-      try { await fetch(`/api/habits/${id}`, { method: 'DELETE' }); } catch (err) {}
-      
-      let local = JSON.parse(localStorage.getItem('userHabits') || '[]');
-      local = local.filter(habit => (habit._id || habit.id) !== id);
-      localStorage.setItem('userHabits', JSON.stringify(local));
-
-      loadHabits();
+    config.labels.forEach((label, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'tracker-menu-btn';
+      btn.style.setProperty('--btn-color', config.colors[idx]);
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        trackerData[key] = idx;
+        saveData('my_pixel_tracker_data', trackerData);
+        popupMenu.classList.add('hidden');
+        renderTracker();
+      });
+      popupMenu.appendChild(btn);
     });
-
-    container.appendChild(card);
-  });
-}
-
-/* TERMINE LOAD & DELETE */
-function loadAppointments() {
-  const container = document.getElementById('appointments-list');
-  if (!container) return;
-
-  const appointments = JSON.parse(localStorage.getItem('userAppointments') || '[]');
-  container.innerHTML = '';
-
-  if (appointments.length === 0) {
-    container.innerHTML = '<p class="subtext">Keine Termine.</p>';
-    return;
   }
-
-  appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  appointments.forEach((app, idx) => {
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.style.setProperty('--card-c', app.color || '#80cbd3');
-
-    card.innerHTML = `
-      <div>
-        <strong>${app.title}</strong>
-        <span style="display:block; font-size: 0.75rem; color: #607d8b;">${app.date ? new Date(app.date).toLocaleDateString('de-DE') : ''}</span>
-      </div>
-      <button class="btn-delete" title="Löschen">🗑️</button>
-    `;
-
-    card.querySelector('.btn-delete').addEventListener('click', () => {
-      appointments.splice(idx, 1);
-      localStorage.setItem('userAppointments', JSON.stringify(appointments));
-      loadAppointments();
-    });
-
-    container.appendChild(card);
-  });
-}
-
-/* TRACKERS & SELF CARE */
-const trackerConfigs = {
-  mood: { name: "Mood & Energy Flow", colors: { '1': '#e0f2f1', '2': '#b2dfdb', '3': '#80cbd3', '4': '#4db6ac', '5': '#00897b' }, labels: ['Rest', 'Low', 'Balanced', 'Good', 'Radiant'] },
-  weather: { name: "Weather & Seasons", colors: { '1': '#b3e5fc', '2': '#81d4fa', '3': '#4fc3f7', '4': '#ffe082', '5': '#ffb74d' }, labels: ['Rainy', 'Cloudy', 'Sunny', 'Hot', 'Stormy'] },
-  health: { name: "Health & Body Mind", colors: { '1': '#ffcdd2', '2': '#f8bbd0', '3': '#e1bee7', '4': '#c8e6c9', '5': '#a5d6a7' }, labels: ['Pain/Sick', 'Fatigued', 'Okay', 'Strong', 'Vital'] },
-  focus: { name: "Productivity & Focus", colors: { '1': '#ffccbc', '2': '#ffe082', '3': '#80deea', '4': '#80cbd3', '5': '#00897b' }, labels: ['Procrastinated', 'Low Focus', 'Normal', 'Deep Work', 'Flow State'] },
-  sleep: { name: "Sleep & Rest", colors: { '1': '#cfd8dc', '2': '#b0bec5', '3': '#90a4ae', '4': '#80cbd3', '5': '#00897b' }, labels: ['< 5h', '5-6h', '6-7h', '7-8h', '8h+ / Rested'] },
-  movement: { name: "Movement & Fitness", colors: { '1': '#e0f2f1', '2': '#80cbd3', '3': '#4db6ac', '4': '#80deea', '5': '#00897b' }, labels: ['Rest Day', 'Walk', 'Yoga/Stretch', 'Run', 'Gym Session'] },
-  connection: { name: "Social & Connection", colors: { '1': '#f8bbd0', '2': '#f48fb1', '3': '#ce93d8', '4': '#80cbd3', '5': '#00897b' }, labels: ['Solo Time', 'Partner', 'Friends', 'Family', 'Community'] },
-  nourishment: { name: "Nourishment & Water", colors: { '1': '#ffccbc', '2': '#ffe082', '3': '#80cbd3', '4': '#4db6ac', '5': '#00897b' }, labels: ['Low Water', 'Balanced', 'Hydrated', 'No-Sugar', 'Clean Eating'] }
-};
-
-function initTrackers() {
-  const select = document.getElementById('tracker-type-select');
-  if (!select) return;
-  select.addEventListener('change', () => renderTracker(select.value));
-  renderTracker('mood');
 
   document.addEventListener('click', (e) => {
-    const popup = document.getElementById('tracker-popup-menu');
-    if (popup && !popup.contains(e.target) && !e.target.classList.contains('interactive-cell')) {
-      popup.classList.add('hidden');
+    if (!popupMenu.contains(e.target) && !e.target.classList.contains('tracker-pixel')) {
+      popupMenu.classList.add('hidden');
     }
   });
-}
 
-function renderTracker(type) {
-  const config = trackerConfigs[type];
-  const container = document.getElementById('interactive-tracker-container');
-  const legendDisplay = document.getElementById('tracker-legend-display');
-  const popup = document.getElementById('tracker-popup-menu');
-  if (!container || !config) return;
+  trackerTypeSelect.addEventListener('change', renderTracker);
+  renderTracker();
 
-  legendDisplay.innerHTML = config.labels.map((lbl, idx) => `
-    <span class="legend-item" style="--c: ${config.colors[idx + 1]}">${lbl}</span>
-  `).join('');
+  // --- 7. BÜCHERREGAL ---
+  let books = loadData('my_bookshelf_data', [
+    { id: '1', title: 'Buch A', color: '#ff7675' },
+    { id: '2', title: 'Buch B', color: '#74b9ff' },
+    { id: '3', title: 'Buch C', color: '#55efc4' }
+  ]);
 
-  const savedData = JSON.parse(localStorage.getItem(`tracker_${type}`) || '{}');
-  const months = ['JAN', 'FEB', 'MÄR', 'APR', 'MAI', 'JUN', 'JUL', 'AUG', 'SEP', 'OKT', 'NOV', 'DEZ'];
+  const bookshelfContainer = document.getElementById('bookshelf-container');
 
-  let svgHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 820" width="100%">`;
-
-  months.forEach((m, idx) => {
-    svgHtml += `<text x="${112 + idx * 52}" y="20" font-size="10" fill="#78909c" font-weight="600" text-anchor="middle">${m}</text>`;
-  });
-
-  for (let day = 1; day <= 31; day++) {
-    const y = 30 + (day - 1) * 24;
-    svgHtml += `<text x="75" y="${y + 15}" font-size="9" fill="#90a4ae" text-anchor="end">${day < 10 ? '0' + day : day}</text>`;
-
-    for (let mIdx = 0; mIdx < 12; mIdx++) {
-      const x = 90 + mIdx * 52;
-      const key = `${mIdx + 1}-${day}`;
-      const lvl = savedData[key] || 0;
-      const fill = lvl ? config.colors[lvl] : '#ffffff';
-
-      svgHtml += `
-        <rect class="interactive-cell" data-key="${key}" data-level="${lvl}"
-              x="${x}" y="${y}" width="44" height="20" rx="4"
-              fill="${fill}" stroke="#e0f2f1" stroke-width="0.8" />
-      `;
-    }
-  }
-  svgHtml += `</svg>`;
-  container.innerHTML = svgHtml;
-
-  container.querySelectorAll('.interactive-cell').forEach(cell => {
-    cell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const targetCell = e.target;
-      const key = targetCell.getAttribute('data-key');
-
-      let menuHtml = config.labels.map((lbl, idx) => {
-        const levelNum = idx + 1;
-        const color = config.colors[levelNum];
-        return `
-          <button class="tracker-menu-btn" style="--btn-color: ${color}" data-level="${levelNum}">
-            ${lbl}
-          </button>
-        `;
-      }).join('');
-
-      menuHtml += `<button class="tracker-menu-btn" style="--btn-color: #b0bec5" data-level="0">🗑️ Zurücksetzen</button>`;
-
-      popup.innerHTML = menuHtml;
-
-      const parentRect = popup.parentElement.getBoundingClientRect();
-      popup.style.left = `${e.clientX - parentRect.left + 10}px`;
-      popup.style.top = `${e.clientY - parentRect.top + 10}px`;
-      popup.classList.remove('hidden');
-
-      popup.querySelectorAll('.tracker-menu-btn').forEach(btn => {
-        btn.onclick = () => {
-          const selectedLvl = parseInt(btn.getAttribute('data-level'));
-          targetCell.setAttribute('data-level', selectedLvl);
-          targetCell.setAttribute('fill', selectedLvl === 0 ? '#ffffff' : config.colors[selectedLvl]);
-
-          savedData[key] = selectedLvl;
-          localStorage.setItem(`tracker_${type}`, JSON.stringify(savedData));
-
-          popup.classList.add('hidden');
-        };
-      });
-    });
-  });
-}
-
-function initBookshelf() {
-  const container = document.getElementById('bookshelf-container');
-  if (!container) return;
-  const savedBooks = JSON.parse(localStorage.getItem('bookshelfData') || '[]');
-
-  function renderBooks() {
-    container.innerHTML = '';
-    for (let i = 0; i < 10; i++) {
-      const book = savedBooks[i] || { title: 'Buch ' + (i + 1), read: false };
-      const bookEl = document.createElement('div');
-      bookEl.className = 'book-spine';
-      bookEl.style.height = (80 + (i % 4) * 14) + 'px';
-      bookEl.style.backgroundColor = book.read ? '#00897b' : '#ffffff';
-      bookEl.style.color = book.read ? '#ffffff' : '#2c3e50';
-      bookEl.textContent = book.title;
-      bookEl.addEventListener('click', () => {
-        const newTitle = prompt('Buchtitel eingeben:', book.title);
+  function renderBookshelf() {
+    bookshelfContainer.innerHTML = '';
+    books.forEach(book => {
+      const spine = document.createElement('div');
+      spine.className = 'book-spine';
+      spine.style.backgroundColor = book.color;
+      spine.textContent = book.title;
+      spine.title = book.title;
+      spine.addEventListener('click', () => {
+        const newTitle = prompt('Buchtitel ändern:', book.title);
         if (newTitle !== null) {
-          book.title = newTitle.trim() === '' ? 'Buch ' + (i + 1) : newTitle;
-          book.read = newTitle.trim() !== '';
-          savedBooks[i] = book;
-          localStorage.setItem('bookshelfData', JSON.stringify(savedBooks));
-          renderBooks();
+          book.title = newTitle;
+          saveData('my_bookshelf_data', books);
+          renderBookshelf();
         }
       });
-      container.appendChild(bookEl);
-    }
-  }
-  renderBooks();
-}
-
-function initBingo() {
-  const container = document.getElementById('bingo-grid');
-  if (!container) return;
-  const bingoItems = [
-    'Spaziergang', 'Digital Detox', '8h Schlaf', 'Meditation', 'Lieblingsessen',
-    'Buch lesen', 'Pflanzen', 'Dehnen', 'Wasser', '10k Schritte',
-    'Kein Zucker', 'Frische Luft', 'FREE SPACE', 'Musik', 'Sonne',
-    'Tee trinken', 'Journaling', 'Freunde', 'Früh Schlaf', 'Ordnung',
-    'Dankbar', 'Podcast', 'Skincare', 'Me-Time', 'Lächeln'
-  ];
-  const savedBingo = JSON.parse(localStorage.getItem('bingoData') || '{}');
-
-  container.innerHTML = '';
-  bingoItems.forEach((item, idx) => {
-    const cell = document.createElement('div');
-    cell.className = 'bingo-cell';
-    cell.textContent = item;
-    if (savedBingo[idx]) {
-      cell.style.backgroundColor = '#80cbd3';
-      cell.style.color = '#ffffff';
-    }
-    cell.addEventListener('click', () => {
-      savedBingo[idx] = !savedBingo[idx];
-      localStorage.setItem('bingoData', JSON.stringify(savedBingo));
-      cell.style.backgroundColor = savedBingo[idx] ? '#80cbd3' : '#ffffff';
-      cell.style.color = savedBingo[idx] ? '#ffffff' : '#2c3e50';
+      bookshelfContainer.appendChild(spine);
     });
-    container.appendChild(cell);
-  });
-}
+  }
+  renderBookshelf();
 
-function initProjectProgress() {
-  const container = document.getElementById('project-list');
-  const addBtn = document.getElementById('add-project-btn');
-  if (!container) return;
-
-  const defaultProjects = [
-    { id: 'f1art', name: 'Acryl-Gemälde / F1 Art', val: 0 },
-    { id: 'crochet', name: 'Amigurumi Häkel-Projekt', val: 0 },
-    { id: 'arduino', name: 'Arduino Microcontroller Code', val: 0 }
+  // --- 8. SELF-CARE BINGO ---
+  let bingoState = loadData('my_bingo_data', Array(25).fill(false));
+  const bingoTasks = [
+    'Spaziergang', 'Meditation', 'Wasser getrunken', 'Sonne genossen', 'Lesen',
+    'Kein Social Media', 'Gesund gekocht', 'Früh schlafen', 'Dehnen', 'Musik hören',
+    'Freund anrufen', 'Zimmer aufgeräumt', 'FREE SPACE', 'Tee trinken', 'Journaling',
+    'Hobby Zeit', 'Skincare', 'Me-Time', 'Lachen', 'Spaziergang 2',
+    'Ziele aufgeschrieben', 'Kein Koffein', 'Frische Luft', 'Dankbar sein', 'Entspannen'
   ];
 
-  let projects = JSON.parse(localStorage.getItem('customProjects') || JSON.stringify(defaultProjects));
+  const bingoGrid = document.getElementById('bingo-grid');
+
+  function renderBingo() {
+    bingoGrid.innerHTML = '';
+    bingoTasks.forEach((task, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'bingo-cell';
+      if (bingoState[idx]) cell.style.backgroundColor = '#a5d6a7';
+      cell.textContent = task;
+      cell.addEventListener('click', () => {
+        bingoState[idx] = !bingoState[idx];
+        saveData('my_bingo_data', bingoState);
+        renderBingo();
+      });
+      bingoGrid.appendChild(cell);
+    });
+  }
+  renderBingo();
+
+  // --- 9. PROJEKTE ---
+  let projects = loadData('my_projects_data', [
+    { id: 'p1', name: 'Bachelorarbeit', progress: 40 },
+    { id: 'p2', name: 'Website Redesign', progress: 75 }
+  ]);
+
+  const projectList = document.getElementById('project-list');
+  const addProjectBtn = document.getElementById('add-project-btn');
 
   function renderProjects() {
-    container.innerHTML = '';
-    projects.forEach((proj, idx) => {
-      const item = document.createElement('div');
-      item.className = 'project-item';
-      item.innerHTML = `
+    projectList.innerHTML = '';
+    projects.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'project-item';
+      el.innerHTML = `
         <div class="project-header">
-          <span>${proj.name}</span>
-          <div>
-            <span id="val-${idx}" style="color: var(--accent-teal); font-weight: 700;">${proj.val}%</span>
-            <button class="btn-delete" data-idx="${idx}" title="Löschen" style="margin-left: 8px;">🗑️</button>
-          </div>
+          <span>${p.name}</span>
+          <span>${p.progress}%</span>
         </div>
-        <input type="range" min="0" max="100" value="${proj.val}" data-idx="${idx}">
+        <input type="range" min="0" max="100" value="${p.progress}" onchange="updateProjectProgress('${p.id}', this.value)">
       `;
-
-      item.querySelector('input[type="range"]').addEventListener('input', (e) => {
-        const newVal = e.target.value;
-        projects[idx].val = newVal;
-        document.getElementById(`val-${idx}`).textContent = `${newVal}%`;
-        localStorage.setItem('customProjects', JSON.stringify(projects));
-      });
-
-      item.querySelector('.btn-delete').addEventListener('click', () => {
-        projects.splice(idx, 1);
-        localStorage.setItem('customProjects', JSON.stringify(projects));
-        renderProjects();
-      });
-
-      container.appendChild(item);
+      projectList.appendChild(el);
     });
   }
 
-  if (addBtn) {
-    addBtn.addEventListener('click', () => {
-      const name = prompt('Name des neuen Projekts:');
-      if (name) {
-        projects.push({ id: 'proj_' + Date.now(), name, val: 0 });
-        localStorage.setItem('customProjects', JSON.stringify(projects));
-        renderProjects();
-      }
-    });
-  }
+  window.updateProjectProgress = function(id, val) {
+    projects = projects.map(p => p.id === id ? { ...p, progress: parseInt(val) } : p);
+    saveData('my_projects_data', projects);
+    renderProjects();
+  };
+
+  addProjectBtn.addEventListener('click', () => {
+    const name = prompt('Projektname:');
+    if (name) {
+      projects.push({ id: 'p_' + Date.now(), name, progress: 0 });
+      saveData('my_projects_data', projects);
+      renderProjects();
+    }
+  });
 
   renderProjects();
-}
+
+});
