@@ -94,12 +94,33 @@
             <!-- 3. Termine Widget -->
             <div class="card glass-card">
               <h3>Termine</h3>
-              <form id="add-appointment-form" class="inline-form">
-                <input type="text" id="app-title" placeholder="Termin..." required>
-                <input type="date" id="app-date" required>
-                <button type="submit" class="btn-primary">+</button>
+              <form id="add-appointment-form" class="vertical-form">
+                <div class="form-group">
+                  <input type="text" id="app-title" placeholder="Termin..." required>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="input-label">Datum</label>
+                    <input type="date" id="app-date" required>
+                  </div>
+                  <div class="form-group color-picker-group">
+                    <label class="input-label">Farbe</label>
+                    <input type="color" id="app-color" value="#3f51b5">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="input-label">Start</label>
+                    <input type="time" id="app-start" value="10:00">
+                  </div>
+                  <div class="form-group">
+                    <label class="input-label">Ende</label>
+                    <input type="time" id="app-end" value="11:00">
+                  </div>
+                </div>
+                <button type="submit" class="btn-primary btn-block">+ Termin eintragen</button>
               </form>
-              <div id="appointments-list" class="item-list"></div>
+              <div id="appointments-list" class="item-list" style="margin-top: 12px;"></div>
             </div>
 
             <!-- 4. Kursliste Widget -->

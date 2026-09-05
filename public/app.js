@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateTime, 1000);
   updateTime();
 
+  // --- LOCAL STORAGE HELPERS ---
+  const loadData = (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback;
+  const saveData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
   // --- 2. NAVIGATION ZWISCHEN SEITEN ---
   const navButtons = document.querySelectorAll('.nav-btn');
   const views = document.querySelectorAll('.dashboard-view');
@@ -25,54 +29,78 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetView = document.getElementById(targetId);
       if (targetView) targetView.classList.add('active');
 
-      // Falls Kalender gerendert werden muss nach Tab-Wechsel
       if (targetId === 'view-dashboard-studium' && window.calendar) {
         window.calendar.render();
       }
     });
   });
 
-  // --- LOCAL STORAGE HELPERS ---
-  const loadData = (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback;
-  const saveData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
-
-  // --- 3. FULLCALENDAR STUNDENPLAN ---
+  // --- 3. FULLCALENDAR INTEGRATION ---
   const calendarEl = document.getElementById('calendar');
   let savedCourses = loadData('my_dashboard_courses', []);
+  let savedAppointments = loadData('my_dashboard_appointments', []);
 
-  window.calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'timeGridWeek',
-    locale: 'de',
-    firstDay: 1, // Montag
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGridWeek,timeGridDay'
-    },
-    slotMinTime: '08:00:00',
-    slotMaxTime: '20:00:00',
-    allDaySlot: false,
-    hiddenDays: [0, 6], // Sa & So ausblenden (optional)
-    events: savedCourses.flatMap(courseToEvents)
-  });
-
-  window.calendar.render();
-
-  // Wandelt ein Kurs-Objekt in ein wiederkehrendes FullCalendar-Event um
-  function courseToEvents(course) {
-    return [{
+  // Events für Kurse (wiederkehrend)
+  function courseToEvent(course) {
+    return {
       id: course.id,
       title: course.type ? `${course.title} (${course.type})` : course.title,
       daysOfWeek: [parseInt(course.day)],
       startTime: course.start,
       endTime: course.end,
-      backgroundColor: course.color, // WICHTIG: Hier wird die individuelle Farbe gesetzt!
+      backgroundColor: course.color,
       borderColor: course.color,
       textColor: '#ffffff'
-    }];
+    };
   }
 
-  // Kurse verwalten & Liste aktualisieren
+  // Events für Termine (konkretes Datum)
+  function appointmentToEvent(app) {
+    const evt = {
+      id: app.id,
+      title: `📌 ${app.title}`,
+      backgroundColor: app.color || '#3f51b5',
+      borderColor: app.color || '#3f51b5',
+      textColor: '#ffffff'
+    };
+
+    if (app.start && app.end) {
+      evt.start = `${app.date}T${app.start}:00`;
+      evt.end = `${app.date}T${app.end}:00`;
+    } else {
+      evt.start = app.date;
+      evt.allDay = true;
+    }
+
+    return evt;
+  }
+
+  // Zusammenführen aller Events
+  function getAllEvents() {
+    const courseEvents = savedCourses.map(courseToEvent);
+    const appointmentEvents = savedAppointments.map(appointmentToEvent);
+    return [...courseEvents, ...appointmentEvents];
+  }
+
+  window.calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    locale: 'de',
+    firstDay: 1,
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'timeGridWeek,timeGridDay'
+    },
+    slotMinTime: '07:00:00',
+    slotMaxTime: '21:00:00',
+    allDaySlot: true,
+    hiddenDays: [0, 6],
+    events: getAllEvents()
+  });
+
+  window.calendar.render();
+
+  // --- KURSE VERWALTEN ---
   const addCourseForm = document.getElementById('add-course-form');
   const coursesListEl = document.getElementById('courses-list');
 
@@ -113,9 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     savedCourses.push(newCourse);
     saveData('my_dashboard_courses', savedCourses);
 
-    // Event zum Kalender hinzufügen
-    courseToEvents(newCourse).forEach(evt => window.calendar.addEvent(evt));
-
+    window.calendar.addEvent(courseToEvent(newCourse));
     renderCoursesList();
     addCourseForm.reset();
   });
@@ -124,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
     savedCourses = savedCourses.filter(c => c.id !== id);
     saveData('my_dashboard_courses', savedCourses);
 
-    // Event aus dem Kalender entfernen
     const calEvent = window.calendar.getEventById(id);
     if (calEvent) calEvent.remove();
 
@@ -133,7 +158,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderCoursesList();
 
-  // --- 4. HABITS WIDGET ---
+  // --- TERMINE VERWALTEN ---
+  const appointmentForm = document.getElementById('add-appointment-form');
+  const appointmentsList = document.getElementById('appointments-list');
+
+  function renderAppointments() {
+    appointmentsList.innerHTML = '';
+    savedAppointments.forEach(app => {
+      const el = document.createElement('div');
+      el.className = 'item-card';
+      el.style.setProperty('--card-c', app.color || '#3f51b5');
+      
+      const timeInfo = (app.start && app.end) ? ` ${app.start} - ${app.end}` : '';
+      
+      el.innerHTML = `
+        <div>
+          <strong>📌 ${app.title}</strong><br>
+          <small>${app.date}${timeInfo}</small>
+        </div>
+        <button class="btn-delete" onclick="deleteAppointment('${app.id}')">✕</button>
+      `;
+      appointmentsList.appendChild(el);
+    });
+  }
+
+  appointmentForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newAppointment = {
+      id: 'app_' + Date.now(),
+      title: document.getElementById('app-title').value,
+      date: document.getElementById('app-date').value,
+      start: document.getElementById('app-start').value,
+      end: document.getElementById('app-end').value,
+      color: document.getElementById('app-color').value
+    };
+
+    savedAppointments.push(newAppointment);
+    saveData('my_dashboard_appointments', savedAppointments);
+
+    window.calendar.addEvent(appointmentToEvent(newAppointment));
+    renderAppointments();
+    appointmentForm.reset();
+  });
+
+  window.deleteAppointment = function(id) {
+    savedAppointments = savedAppointments.filter(a => a.id !== id);
+    saveData('my_dashboard_appointments', savedAppointments);
+
+    const calEvent = window.calendar.getEventById(id);
+    if (calEvent) calEvent.remove();
+
+    renderAppointments();
+  };
+
+  renderAppointments();
+
+  // --- HABITS WIDGET ---
   let habits = loadData('my_dashboard_habits', [
     { id: '1', name: 'Wasser trinken', done: false },
     { id: '2', name: '30 Min. Lesen', done: true }
@@ -181,49 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderHabits();
 
-  // --- 5. TERMINE WIDGET ---
-  let appointments = loadData('my_dashboard_appointments', []);
-
-  const appointmentForm = document.getElementById('add-appointment-form');
-  const appointmentsList = document.getElementById('appointments-list');
-
-  function renderAppointments() {
-    appointmentsList.innerHTML = '';
-    appointments.forEach(app => {
-      const el = document.createElement('div');
-      el.className = 'item-card';
-      el.innerHTML = `
-        <div>
-          <strong>${app.title}</strong><br>
-          <small>${app.date}</small>
-        </div>
-        <button class="btn-delete" onclick="deleteAppointment('${app.id}')">✕</button>
-      `;
-      appointmentsList.appendChild(el);
-    });
-  }
-
-  appointmentForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const title = document.getElementById('app-title').value;
-    const date = document.getElementById('app-date').value;
-
-    appointments.push({ id: 'app_' + Date.now(), title, date });
-    saveData('my_dashboard_appointments', appointments);
-    renderAppointments();
-
-    appointmentForm.reset();
-  });
-
-  window.deleteAppointment = function(id) {
-    appointments = appointments.filter(a => a.id !== id);
-    saveData('my_dashboard_appointments', appointments);
-    renderAppointments();
-  };
-
-  renderAppointments();
-
-  // --- 6. PIXEL TRACKER ---
+  // --- PIXEL TRACKER ---
   const trackerTypeSelect = document.getElementById('tracker-type-select');
   const legendContainer = document.getElementById('tracker-legend-display');
   const trackerGridContainer = document.getElementById('interactive-tracker-container');
@@ -270,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = trackerTypeSelect.value;
     const config = trackerConfigs[type];
 
-    // Legende bauen
     legendContainer.innerHTML = '';
     config.labels.forEach((label, idx) => {
       const item = document.createElement('div');
@@ -280,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
       legendContainer.appendChild(item);
     });
 
-    // Raster bauen (30 Tage x 12 Monate als Beispiel)
     trackerGridContainer.innerHTML = '';
     const grid = document.createElement('div');
     grid.style.display = 'grid';
@@ -299,10 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const val = trackerData[key];
       pixel.style.backgroundColor = val !== undefined ? config.colors[val] : '#ffffff';
 
-      pixel.addEventListener('click', (e) => {
-        openPopupMenu(e, key, config);
-      });
-
+      pixel.addEventListener('click', (e) => openPopupMenu(e, key, config));
       grid.appendChild(pixel);
     }
 
@@ -339,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
   trackerTypeSelect.addEventListener('change', renderTracker);
   renderTracker();
 
-  // --- 7. BÜCHERREGAL ---
+  // --- BÜCHERREGAL ---
   let books = loadData('my_bookshelf_data', [
     { id: '1', title: 'Buch A', color: '#ff7675' },
     { id: '2', title: 'Buch B', color: '#74b9ff' },
@@ -369,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   renderBookshelf();
 
-  // --- 8. SELF-CARE BINGO ---
+  // --- SELF-CARE BINGO ---
   let bingoState = loadData('my_bingo_data', Array(25).fill(false));
   const bingoTasks = [
     'Spaziergang', 'Meditation', 'Wasser getrunken', 'Sonne genossen', 'Lesen',
@@ -398,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   renderBingo();
 
-  // --- 9. PROJEKTE ---
+  // --- PROJEKTE ---
   let projects = loadData('my_projects_data', [
     { id: 'p1', name: 'Bachelorarbeit', progress: 40 },
     { id: 'p2', name: 'Website Redesign', progress: 75 }
